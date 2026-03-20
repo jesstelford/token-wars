@@ -1,4 +1,4 @@
-import { Bell, TrendingUp, TrendingDown, Shield, Zap, Package, Coins, Info } from 'lucide-react';
+import { Bell, TrendingUp, TrendingDown, Shield, Zap, Package, Coins, Info, CheckCircle } from 'lucide-react';
 import type { GameEvent, EventType } from '../../types/game';
 
 interface EventLogProps {
@@ -11,8 +11,11 @@ const EVENT_ICONS: Record<EventType, React.ReactNode> = {
   robbery: <Shield className="w-3.5 h-3.5 text-orange-500" />,
   bank_hack: <Zap className="w-3.5 h-3.5 text-red-600" />,
   ftc: <Shield className="w-3.5 h-3.5 text-red-500" />,
+  ftc_win: <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />,
   inventory_expansion: <Package className="w-3.5 h-3.5 text-emerald-500" />,
   resource_influx: <Coins className="w-3.5 h-3.5 text-emerald-600" />,
+  gear_found: <Package className="w-3.5 h-3.5 text-sky-500" />,
+  vendor: <Coins className="w-3.5 h-3.5 text-sky-500" />,
   info: <Info className="w-3.5 h-3.5 text-slate-400" />,
 };
 
@@ -22,8 +25,11 @@ const EVENT_BG: Record<EventType, string> = {
   robbery: 'border-l-2 border-orange-400 bg-orange-50 dark:bg-orange-900/10',
   bank_hack: 'border-l-2 border-red-600 bg-red-50 dark:bg-red-900/15',
   ftc: 'border-l-2 border-red-500 bg-red-50 dark:bg-red-900/10',
+  ftc_win: 'border-l-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-900/10',
   inventory_expansion: 'border-l-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-900/10',
   resource_influx: 'border-l-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10',
+  gear_found: 'border-l-2 border-sky-400 bg-sky-50 dark:bg-sky-900/10',
+  vendor: 'border-l-2 border-sky-400 bg-sky-50 dark:bg-sky-900/10',
   info: 'border-l-2 border-slate-200 dark:border-slate-700',
 };
 

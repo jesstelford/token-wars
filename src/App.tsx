@@ -204,12 +204,12 @@ export default function App() {
   }
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
+    <div className={`${darkMode ? 'dark' : ''} bg-slate-100 dark:bg-slate-950`} style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      <Header darkMode={darkMode} onToggleDark={toggleDark} />
       <div
-        className="flex flex-col bg-slate-100 dark:bg-slate-950 sm:overflow-hidden"
-        style={{ height: '100dvh', maxWidth: '1024px', margin: '0 auto' }}
+        className="flex flex-col flex-1 sm:overflow-hidden"
+        style={{ maxWidth: '1024px', margin: '0 auto', width: '100%' }}
       >
-        <Header darkMode={darkMode} onToggleDark={toggleDark} />
 
         <div className="flex-1 flex flex-col gap-px sm:gap-2 sm:p-2 sm:min-h-0 overflow-y-auto sm:overflow-hidden">
           <div className="flex flex-col sm:flex-row gap-px sm:gap-2 flex-none">
@@ -246,7 +246,9 @@ export default function App() {
         {state.game_phase === 'encounter' && state.encounter_state && !pendingTheft && (
           <EncounterModal
             encounter={state.encounter_state}
-            onRun={(success) => resolveEncounterRun(success)}
+            inventory={state.inventory}
+            gearEffects={gearEffects}
+            onRun={(success, precomputedInventory, lostItems) => resolveEncounterRun(success, precomputedInventory, lostItems)}
             onFight={(success, healthLost) => resolveEncounterFight(success, healthLost)}
           />
         )}

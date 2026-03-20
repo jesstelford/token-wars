@@ -6,7 +6,8 @@ import { ASSET_MAP } from '../constants/assets';
 import type { AssetId } from '../constants/assets';
 import type { CommunityId } from '../constants/communities';
 import { generateInitialPrices, generateInitialAvailableAssets, runMarketLoop } from '../utils/marketLoop';
-import { resolveRun, resolveFight, buildPartialInventoryLossWithGear } from '../utils/encounters';
+import { COMMUNITIES } from '../constants/communities';
+import { resolveFight } from '../utils/encounters';
 import { generateEventId } from '../utils/formatting';
 import { calculateScore } from '../utils/scoring';
 import { computeGearEffects, getAllGear, getScrapValue } from '../utils/gearEffects';
@@ -19,6 +20,7 @@ const SCORES_KEY = 'token_wars_scores';
 
 function buildInitialState(equippedGear: GearItemId[] = [], extraDebt: number = 0): GameState {
   const startingDebt = INITIAL_DEBT + extraDebt;
+  const randomCommunity = COMMUNITIES[Math.floor(Math.random() * COMMUNITIES.length)].id;
   return {
     current_cash: INITIAL_DEBT,
     bank_savings: 0,
@@ -27,7 +29,7 @@ function buildInitialState(equippedGear: GearItemId[] = [], extraDebt: number = 
     current_day: 1,
     inventory: [],
     capacity: INITIAL_CAPACITY,
-    current_community: 'reddit',
+    current_community: randomCommunity,
     market_prices: generateInitialPrices(),
     available_assets: generateInitialAvailableAssets(),
     event_log: [{
@@ -216,34 +218,40 @@ export function useGameState() {
     });
   }, [setState]);
 
-  const resolveEncounterRun = useCallback((success: boolean) => {
+  const resolveEncounterRun = useCallback((success: boolean, precomputedInventory?: GameState['inventory'], lostItems?: { assetId: string; name: string; quantityLost: number }[]) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const allGear = getAllGear(prev);
-      const gearEffects = computeGearEffects(allGear);
-      const result = resolveRun(prev, success, gearEffects);
-      const newInventory = result.lostInventory
-        ? buildPartialInventoryLossWithGear(prev.inventory, gearEffects)
-        : prev.inventory;
-      const newHealth = Math.max(0, prev.health - result.healthLost);
-      const newLog = [result.event, ...prev.event_log].slice(0, 20);
+      const newHealth = Math.max(0, prev.health - (success ? 0 : 20));
+      const newInventory = success ? prev.inventory : (precomputedInventory ?? prev.inventory);
+      const lostSummary = lostItems && lostItems.length > 0
+        ? lostItems.map(l => `${l.quantityLost}x ${l.name}`).join(', ')
+        : null;
+      const eventMessage = success
+        ? 'You escaped the regulators. Barely made it out.'
+        : lostSummary
+          ? `Caught while fleeing. Seized: ${lostSummary}. -20 vibes.`
+          : 'Caught while fleeing. No inventory lost. -20 vibes.';
+      const eventType = success ? 'ftc_win' as const : 'ftc' as const;
+      const event = { id: generateEventId(), type: eventType, message: eventMessage, day: prev.current_day };
+      const newLog = [event, ...prev.event_log].slice(0, 20);
+      const terminated = !success && newHealth <= 0;
       return {
         ...prev,
         health: newHealth,
         inventory: newInventory,
         event_log: newLog,
-        game_phase: result.terminated ? 'gameover' : 'playing',
+        game_phase: terminated ? 'gameover' : 'playing',
         encounter_state: null,
       };
     });
   }, [setState]);
 
-  const resolveEncounterFight = useCallback((success: boolean, healthLost?: number) => {
+  const resolveEncounterFight = useCallback((success: boolean, healthLostParam?: number) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
       const allGear = getAllGear(prev);
       const gearEffects = computeGearEffects(allGear);
-      const result = resolveFight(prev, success, healthLost, gearEffects);
+      const result = resolveFight(prev, success, healthLostParam, gearEffects);
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
 

@@ -10,6 +10,7 @@ export type EventType =
   | 'robbery'
   | 'bank_hack'
   | 'ftc'
+  | 'ftc_win'
   | 'inventory_expansion'
   | 'resource_influx'
   | 'gear_found'

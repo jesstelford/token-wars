@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, Sparkles } from 'lucide-react';
-import type { EncounterState } from '../../types/game';
+import type { EncounterState, InventoryItem } from '../../types/game';
 import type { GearItemId } from '../../constants/items';
 import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
 import { GearIcon } from '../Gear/GearIcon';
+import { buildDetailedInventoryLoss, type LostInventoryEntry } from '../../utils/encounters';
+import type { ActiveEffects } from '../../utils/gearEffects';
 
 interface EncounterModalProps {
   encounter: EncounterState;
-  onRun: (success: boolean) => void;
+  inventory: InventoryItem[];
+  gearEffects?: ActiveEffects;
+  onRun: (success: boolean, precomputedInventory?: InventoryItem[], lostItems?: LostInventoryEntry[]) => void;
   onFight: (success: boolean, healthLost: number) => void;
 }
 
@@ -18,12 +22,14 @@ interface Result {
   message: string;
   healthLost?: number;
   itemDrop?: GearItemId;
+  lostItems?: LostInventoryEntry[];
+  precomputedInventory?: InventoryItem[];
 }
 
 const RUN_SUCCESS_RATE = 0.60;
 const FIGHT_SUCCESS_RATE = 0.30;
 
-export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProps) {
+export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFight }: EncounterModalProps) {
   const [decision, setDecision] = useState<Decision>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [resolvedSuccess, setResolvedSuccess] = useState<boolean>(false);
@@ -32,12 +38,26 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
     const success = Math.random() < RUN_SUCCESS_RATE;
     setDecision('run');
     setResolvedSuccess(success);
-    setResult({
-      success,
-      message: success
-        ? 'You slipped away before they could catch you. Close call.'
-        : 'They caught you. Some of your inventory was seized and you took 20 health damage.',
-    });
+
+    if (success) {
+      setResult({
+        success,
+        message: 'You slipped away before they could catch you. Close call.',
+      });
+    } else {
+      const { newInventory, lostItems } = buildDetailedInventoryLoss(inventory, gearEffects);
+      const lostSummary = lostItems.length > 0
+        ? lostItems.map(l => `${l.quantityLost}x ${l.name}`).join(', ')
+        : null;
+      setResult({
+        success,
+        message: lostSummary
+          ? `They caught you. Seized: ${lostSummary}. -20 vibes.`
+          : `They caught you. Nothing seized. -20 vibes.`,
+        lostItems: lostItems.length > 0 ? lostItems : undefined,
+        precomputedInventory: newInventory,
+      });
+    }
   }
 
   function handleFight() {
@@ -51,14 +71,14 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
       healthLost,
       message: success
         ? 'You outmaneuvered them legally. Assets retained, no damage taken.'
-        : `You lost the fight. You took ${healthLost} health damage.`,
+        : `You lost the fight. -${healthLost} vibes.`,
       itemDrop: success ? itemDrop : undefined,
     });
   }
 
   function handleContinue() {
     if (decision === 'run') {
-      onRun(resolvedSuccess);
+      onRun(resolvedSuccess, result?.precomputedInventory, result?.lostItems);
     } else if (decision === 'fight') {
       onFight(resolvedSuccess, result?.healthLost ?? 0);
     }
@@ -86,7 +106,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
                 >
                   <span className="text-2xl">🏃</span>
                   <span className="font-bold text-sky-700 dark:text-sky-300">Run</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">60% success. Fail: lose 50–100% of some inventory + 20 health</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">60% success. Fail: lose 50–100% of some inventory + 20 vibes</span>
                 </button>
 
                 <button
@@ -95,7 +115,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
                 >
                   <span className="text-2xl">⚖️</span>
                   <span className="font-bold text-red-700 dark:text-red-300">Fight</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">30% success. Fail: 40–50 health or terminated</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">30% success. Fail: 40–50 vibes or terminated</span>
                 </button>
               </div>
             </>

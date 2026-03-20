@@ -82,7 +82,7 @@ export function StatsPanel({ state, onOpenBank, onOpenDebt }: StatsPanelProps) {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1">
               <Activity className="w-3 h-3 text-slate-400" />
-              <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Health</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vibes</span>
             </div>
             <span className={`font-mono font-bold text-xs ${healthColor}`}>{state.health}<span className="text-slate-400 dark:text-slate-500 font-normal">/100</span></span>
           </div>

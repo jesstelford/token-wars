@@ -7,8 +7,8 @@ interface HeaderProps {
 
 export function Header({ darkMode, onToggleDark }: HeaderProps) {
   return (
-    <header className="flex-none border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-      <div className="flex items-center justify-between px-4 py-2">
+    <header className="flex-none border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm w-full">
+      <div className="flex items-center justify-between px-4 py-2" style={{ maxWidth: '1024px', margin: '0 auto', width: '100%' }}>
         <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white font-mono">
           TOKEN<span className="text-sky-600 dark:text-sky-400">WARS</span>
         </span>

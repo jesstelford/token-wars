@@ -59,7 +59,7 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-1">
             Simulation Complete
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Day {state.current_day} / 31 — {state.health <= 0 ? 'Health depleted' : 'Time expired'}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Day {state.current_day} / 31 — {state.health <= 0 ? 'Vibes depleted' : 'Time expired'}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm mb-5">
