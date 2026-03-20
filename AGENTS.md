@@ -1,5 +1,14 @@
 # Token Wars — Agent Reference
 
+## Documentation
+
+| File | Purpose |
+|---|---|
+| `GAME_DESIGN.md` | Full game mechanics reference — assets, economy, events, encounters, scoring, and strategy notes |
+| `DECISIONS.md` | Chronological log of design and implementation decisions with rationale |
+
+---
+
 ## Stack
 
 React 18 + TypeScript 5 | Vite 5 | Tailwind CSS 3 | Lucide React | LocalStorage (no server, no auth)
