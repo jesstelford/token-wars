@@ -18,52 +18,61 @@ export function AssetRow({ assetId, marketEntry, isExternalHover, onBuy, onMouse
   if (!asset) return null;
 
   const { price, isAnomaly, anomalyType } = marketEntry;
+  const isSurge = isAnomaly && anomalyType === 'surge';
+  const isCrash = isAnomaly && anomalyType === 'crash';
 
-  const rowBg = isAnomaly
-    ? anomalyType === 'surge'
-      ? 'bg-amber-50/60 dark:bg-amber-900/10'
-      : 'bg-red-50/60 dark:bg-red-900/10'
-    : '';
+  const rowBg = isSurge
+    ? 'var(--event-surge-bg)'
+    : isCrash
+    ? 'var(--event-crash-bg)'
+    : isExternalHover
+    ? 'var(--table-hover-bg)'
+    : 'transparent';
 
-  const externalHoverClass = isExternalHover ? 'bg-slate-50 dark:bg-slate-800/50' : '';
+  const nameColor = isSurge ? 'var(--color-warning)' : isCrash ? 'var(--color-danger)' : 'var(--color-text-primary)';
+  const priceColor = isSurge ? 'var(--color-warning)' : isCrash ? 'var(--color-danger)' : 'var(--color-text-primary)';
 
   return (
     <tr
       onClick={() => onBuy(assetId)}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${rowBg} ${externalHoverClass}`}
+      onMouseEnter={e => {
+        onMouseEnter();
+        (e.currentTarget as HTMLTableRowElement).style.background = 'var(--table-hover-bg)';
+      }}
+      onMouseLeave={e => {
+        onMouseLeave();
+        (e.currentTarget as HTMLTableRowElement).style.background = rowBg;
+      }}
+      style={{
+        background: rowBg,
+        borderBottom: '1px solid var(--table-divider)',
+        cursor: 'pointer',
+        transition: 'background 0.15s',
+      }}
     >
       <td className="px-3 py-1.5">
-        <span className={`text-xs font-semibold ${isAnomaly ? (anomalyType === 'surge' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300') : 'text-slate-800 dark:text-slate-100'}`}>
+        <span className="text-xs font-semibold" style={{ color: nameColor, fontFamily: 'var(--font-body)' }}>
           {asset.name}
         </span>
       </td>
       <td className="px-3 py-1.5 text-right">
         <div className="inline-flex items-center justify-end gap-1">
-          {isAnomaly && (
-            anomalyType === 'surge'
-              ? <TrendingUp className="w-3 h-3 text-amber-500 shrink-0" />
-              : <TrendingDown className="w-3 h-3 text-red-500 shrink-0" />
-          )}
-          <span className={`font-mono text-xs font-bold ${
-            isAnomaly
-              ? anomalyType === 'surge'
-                ? 'text-amber-600 dark:text-amber-300'
-                : 'text-red-600 dark:text-red-400'
-              : 'text-slate-700 dark:text-slate-200'
-          }`}>
+          {isSurge && <TrendingUp className="w-3 h-3 shrink-0" style={{ color: 'var(--color-warning)' }} />}
+          {isCrash && <TrendingDown className="w-3 h-3 shrink-0" style={{ color: 'var(--color-danger)' }} />}
+          <span className="font-bold text-xs" style={{ fontFamily: 'var(--font-mono)', color: priceColor }}>
             {formatCurrencyFull(price)}
           </span>
         </div>
       </td>
       <td className="px-2 py-1.5 text-right w-16">
         <span
-          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded transition-colors bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 ${
-            isExternalHover
-              ? ''
-              : 'group-hover:bg-sky-600 group-hover:text-white dark:group-hover:bg-sky-600 dark:group-hover:text-white'
-          }`}
+          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1"
+          style={{
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--color-accent-muted)',
+            color: 'var(--color-accent)',
+            fontFamily: 'var(--font-body)',
+          }}
         >
           <ShoppingCart className="w-3 h-3" />
           Buy

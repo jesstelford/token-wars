@@ -3,6 +3,7 @@ import { useGameState } from './hooks/useGameState';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useGamepadInput } from './hooks/useGamepadInput';
+import { useTheme } from './context/ThemeContext';
 
 import { Header } from './components/Header/Header';
 import { StatsPanel } from './components/Stats/StatsPanel';
@@ -31,7 +32,7 @@ import { fetchUnlockedGear, getPlayerId } from './lib/gearUnlocks';
 import { computeGearEffects, getAllGear } from './utils/gearEffects';
 
 export default function App() {
-  const [darkMode, setDarkMode] = useLocalStorage<boolean>('token_wars_theme', false);
+  const { themeId } = useTheme();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<AssetId | null>(null);
   const [financeTab, setFinanceTab] = useState<'debt' | 'deposit' | 'withdraw'>('debt');
@@ -67,22 +68,9 @@ export default function App() {
   useGamepadInput(screenPhase === 'game');
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  useEffect(() => {
     const playerId = getPlayerId();
     fetchUnlockedGear(playerId).then(setUnlockedGear);
   }, []);
-
-  function toggleDark() {
-    setDarkMode(prev => !prev);
-  }
 
   function handleNewGame() {
     clearSave();
@@ -153,64 +141,58 @@ export default function App() {
 
   const hasBlockingModal = pendingTheft || pendingFreeToken || pendingItemDrop || pendingVendor;
 
+  const hasScanlines = ['retro', 'terminal', 'crypto', 'neon'].includes(themeId);
+
   if (screenPhase === 'loadout') {
     return (
-      <div className={darkMode ? 'dark' : ''}>
-        <GearLoadoutScreen
-          unlockedGearIds={unlockedGear}
-          darkMode={darkMode}
-          onToggleDark={toggleDark}
-          onStart={handleLoadoutStart}
-          onSkip={handleLoadoutSkip}
-        />
-      </div>
+      <GearLoadoutScreen
+        unlockedGearIds={unlockedGear}
+        onStart={handleLoadoutStart}
+        onSkip={handleLoadoutSkip}
+      />
     );
   }
 
   if (screenPhase === 'title' && !isGameOver) {
     return (
-      <div className={darkMode ? 'dark' : ''}>
-        <TitleScreen
-          scores={scores}
-          hasSave={hasSave()}
-          darkMode={darkMode}
-          onToggleDark={toggleDark}
-          onNewGame={handleNewGame}
-          onContinue={handleContinue}
-        />
-      </div>
+      <TitleScreen
+        scores={scores}
+        hasSave={hasSave()}
+        onNewGame={handleNewGame}
+        onContinue={handleContinue}
+      />
     );
   }
 
   if (isGameOver) {
     return (
-      <div className={darkMode ? 'dark' : ''}>
-        <GameOverScreen
-          state={state}
-          onSubmitScore={(name, updateLatest) => submitScore(name, updateLatest)}
-          onNewGame={() => {
-            clearSave();
-            if (unlockedGear.length > 0) {
-              setScreenPhase('loadout');
-            } else {
-              startNewGame([], 0);
-              setScreenPhase('game');
-              setActiveModal(null);
-            }
-          }}
-        />
-      </div>
+      <GameOverScreen
+        state={state}
+        onSubmitScore={(name, updateLatest) => submitScore(name, updateLatest)}
+        onNewGame={() => {
+          clearSave();
+          if (unlockedGear.length > 0) {
+            setScreenPhase('loadout');
+          } else {
+            startNewGame([], 0);
+            setScreenPhase('game');
+            setActiveModal(null);
+          }
+        }}
+      />
     );
   }
 
   return (
-    <div className={`${darkMode ? 'dark' : ''} bg-slate-100 dark:bg-slate-950`} style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
-      <Header darkMode={darkMode} onToggleDark={toggleDark} />
+    <div
+      className={hasScanlines ? 'theme-scanlines' : ''}
+      style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg-root)' }}
+    >
+      <Header />
       <div
         className="flex flex-col flex-1 sm:overflow-hidden"
         style={{ maxWidth: '1024px', margin: '0 auto', width: '100%' }}
       >
-
         <div className="flex-1 flex flex-col gap-px sm:gap-2 sm:p-2 sm:min-h-0 overflow-y-auto sm:overflow-hidden">
           <div className="flex flex-col sm:flex-row gap-px sm:gap-2 flex-none">
             <div className="flex-1">

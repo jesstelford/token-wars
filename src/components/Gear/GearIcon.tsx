@@ -27,10 +27,11 @@ const ICON_MAP: Record<string, React.FC<ComponentProps<typeof Usb>>> = {
 interface GearIconProps {
   name: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function GearIcon({ name, className }: GearIconProps) {
+export function GearIcon({ name, className, style }: GearIconProps) {
   const Icon = ICON_MAP[name];
   if (!Icon) return null;
-  return <Icon className={className} />;
+  return <Icon className={className} style={style} />;
 }

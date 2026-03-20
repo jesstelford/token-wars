@@ -23,13 +23,13 @@ export function GearTooltip({ item, isEquipped, anchorRect }: GearTooltipProps) 
         transform: 'translate(-50%, -100%)',
       }}
     >
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-xl">
+      <div className="p-2.5 shadow-xl" style={{ background: 'var(--modal-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
         <div className="flex items-center gap-1.5 mb-1">
           <span className={`text-xs font-bold uppercase tracking-wide ${colors.text}`}>{item.rarity}</span>
-          {isEquipped && <span className="text-xs text-slate-500 italic">equipped</span>}
+          {isEquipped && <span className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>equipped</span>}
         </div>
-        <p className="text-xs font-semibold text-white mb-1">{item.name}</p>
-        <p className="text-xs text-slate-400 leading-snug">{item.effectSummary}</p>
+        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>{item.name}</p>
+        <p className="text-xs leading-snug" style={{ color: 'var(--color-text-muted)' }}>{item.effectSummary}</p>
       </div>
     </div>,
     document.body

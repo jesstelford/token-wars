@@ -21,9 +21,17 @@ export function GearPanel({ equippedGear, foundGear }: GearPanelProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-0 sm:border border-slate-200 dark:border-slate-700 rounded-none sm:rounded-lg bg-white dark:bg-slate-900">
-      <Shield className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
-      <span className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 shrink-0">Gear</span>
+    <div
+      className="theme-panel flex items-center gap-2 px-3 py-2 border-0 sm:border"
+      style={{ borderRadius: '0', borderColor: 'var(--color-border)' }}
+    >
+      <Shield className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
+      <span
+        className="text-xs font-bold uppercase tracking-widest shrink-0"
+        style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-heading)' }}
+      >
+        Gear
+      </span>
 
       <div className="flex items-center gap-1.5 ml-2 flex-1">
         {allGear.map(id => {
@@ -39,7 +47,10 @@ export function GearPanel({ equippedGear, foundGear }: GearPanelProps) {
               onMouseEnter={e => handleMouseEnter(id, e.currentTarget)}
               onMouseLeave={() => setTooltip(null)}
             >
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center border-2 ${colors.border} ${colors.bg} cursor-default ${isEquipped ? 'opacity-100' : 'opacity-90'}`}>
+              <div
+                className={`w-7 h-7 flex items-center justify-center border-2 ${colors.border} ${colors.bg} cursor-default ${isEquipped ? 'opacity-100' : 'opacity-90'}`}
+                style={{ borderRadius: 'var(--radius-sm)' }}
+              >
                 <GearIcon name={item.icon} className={`w-3.5 h-3.5 ${colors.text}`} />
               </div>
             </div>
@@ -47,13 +58,20 @@ export function GearPanel({ equippedGear, foundGear }: GearPanelProps) {
         })}
 
         {Array.from({ length: emptySlots }).map((_, i) => (
-          <div key={`empty-${i}`} className="w-7 h-7 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center">
-            <span className="text-slate-300 dark:text-slate-700 text-xs">+</span>
+          <div
+            key={`empty-${i}`}
+            className="w-7 h-7 border-2 border-dashed flex items-center justify-center"
+            style={{ borderRadius: 'var(--radius-sm)', borderColor: 'var(--gear-empty-border)' }}
+          >
+            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.65rem' }}>+</span>
           </div>
         ))}
       </div>
 
-      <span className="ml-auto text-xs font-mono text-slate-400 dark:text-slate-500 shrink-0">
+      <span
+        className="ml-auto text-xs shrink-0"
+        style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
+      >
         {allGear.length}/{MAX_GEAR_SLOTS}
       </span>
 

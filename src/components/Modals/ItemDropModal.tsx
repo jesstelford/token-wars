@@ -37,8 +37,8 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
   const isPositive = isPositiveEffect(item.effectSummary);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: 'var(--modal-backdrop)' }}>
+      <div className="w-full max-w-sm shadow-2xl overflow-hidden animate-in" style={{ background: 'var(--modal-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--modal-radius)' }}>
         <div className="px-5 pt-6 pb-4">
           <div className="flex items-start gap-4">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 ${colors.border} ${colors.bg} shrink-0`}>
@@ -51,11 +51,11 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
                   {SOURCE_LABELS[drop.source]}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-white leading-tight">{item.name}</h3>
+              <h3 className="text-lg font-bold leading-tight" style={{ color: 'var(--color-text-primary)' }}>{item.name}</h3>
             </div>
           </div>
 
-          <p className="text-slate-400 text-sm mt-3 leading-relaxed">
+          <p className="text-sm mt-3 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
             {item.description}{' '}
             <span className={`text-xs font-medium ${colors.text} opacity-70`}>{rarityLabel}</span>
           </p>
@@ -71,18 +71,18 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
           </div>
 
           {isDuplicate && (
-            <div className="mt-3 px-3 py-2 rounded-lg bg-amber-900/30 border border-amber-700/50">
-              <p className="text-sm text-amber-300 font-semibold">Already owned</p>
-              <p className="text-xs text-amber-400/80 mt-0.5">
-                This gear will be scrapped for <span className="font-bold text-amber-300">${scrapValue.toLocaleString()}</span>.
+            <div className="mt-3 px-3 py-2" style={{ background: 'var(--color-warning-muted)', border: '1px solid var(--color-warning)', borderRadius: 'var(--radius-sm)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-warning)' }}>Already owned</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-warning)' }}>
+                This gear will be scrapped for <span className="font-bold">${scrapValue.toLocaleString()}</span>.
               </p>
             </div>
           )}
 
           {isFull && (
-            <div className="mt-3 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700">
-              <p className="text-sm text-slate-300 font-semibold">Gear slots full (3/3)</p>
-              <p className="text-xs text-slate-400 mt-0.5">This item cannot be added. It will be discarded.</p>
+            <div className="mt-3 px-3 py-2" style={{ background: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>Gear slots full (3/3)</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>This item cannot be added. It will be discarded.</p>
             </div>
           )}
         </div>
@@ -91,14 +91,16 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
           {isDuplicate ? (
             <button
               onClick={() => onCollect(drop.itemId)}
-              className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition-colors"
+              className="flex-1 py-2.5 font-bold text-sm transition-colors"
+              style={{ background: 'var(--color-warning)', color: 'var(--color-text-inverse)', borderRadius: 'var(--radius-sm)' }}
             >
               Scrap for ${scrapValue.toLocaleString()}
             </button>
           ) : isFull ? (
             <button
               onClick={onDismiss}
-              className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition-colors"
+              className="flex-1 py-2.5 font-bold text-sm transition-colors"
+              style={{ background: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-sm)' }}
             >
               Dismiss
             </button>
@@ -106,14 +108,16 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
             <>
               <button
                 onClick={onDismiss}
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold text-sm transition-colors"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 font-semibold text-sm transition-colors"
+                style={{ background: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: 'var(--radius-sm)' }}
               >
                 <X className="w-3.5 h-3.5" />
                 Skip
               </button>
               <button
                 onClick={() => onCollect(drop.itemId)}
-                className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm transition-colors"
+                className="flex-1 py-2.5 font-bold text-sm transition-colors"
+                style={{ background: 'var(--color-accent)', color: 'var(--color-text-inverse)', borderRadius: 'var(--radius-sm)' }}
               >
                 Collect
               </button>
