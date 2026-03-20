@@ -1,5 +1,6 @@
 import type { AssetId } from '../constants/assets';
 import type { CommunityId } from '../constants/communities';
+import type { GearItemId } from '../constants/items';
 
 export type GamePhase = 'title' | 'playing' | 'encounter' | 'gameover';
 
@@ -11,6 +12,8 @@ export type EventType =
   | 'ftc'
   | 'inventory_expansion'
   | 'resource_influx'
+  | 'gear_found'
+  | 'vendor'
   | 'info';
 
 export interface GameEvent {
@@ -36,12 +39,23 @@ export interface MarketPrice {
 export interface EncounterState {
   communityName: string;
   message: string;
+  pendingItemDrop?: GearItemId;
 }
 
 export interface PendingTheft {
   type: 'robbery' | 'bank_hack';
   amountLost: number;
   newTotal: number;
+}
+
+export interface PendingItemDrop {
+  itemId: GearItemId;
+  source: 'travel' | 'ftc_win' | 'milestone';
+}
+
+export interface PendingVendor {
+  offeredItems: GearItemId[];
+  prices: Partial<Record<GearItemId, number>>;
 }
 
 export interface GameState {
@@ -60,6 +74,10 @@ export interface GameState {
   encounter_state: EncounterState | null;
   pending_thefts: PendingTheft[];
   pending_free_tokens: PendingFreeToken[];
+  equipped_gear: GearItemId[];
+  found_gear: GearItemId[];
+  pending_item_drop: PendingItemDrop | null;
+  pending_vendor: PendingVendor | null;
 }
 
 export interface HighScoreEntry {
@@ -67,6 +85,7 @@ export interface HighScoreEntry {
   score: number;
   date: string;
   days_survived: number;
+  gear_collected?: GearItemId[];
 }
 
 export type ModalType = 'buy' | 'sell' | 'finance' | 'encounter' | 'highscores' | null;

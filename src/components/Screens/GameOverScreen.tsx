@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Trophy, RotateCcw, Pencil, Check } from 'lucide-react';
 import type { GameState } from '../../types/game';
-import { calculateScore } from '../../utils/scoring';
-import { getScoreTier } from '../../utils/scoring';
+import { calculateScore, getScoreTier } from '../../utils/scoring';
 import { formatCurrencyFull } from '../../utils/formatting';
 import { Confetti } from './Confetti';
+import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
+import { getAllGear } from '../../utils/gearEffects';
+import { GearIcon } from '../Gear/GearIcon';
 
 interface GameOverScreenProps {
   state: GameState;
@@ -19,6 +21,7 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
 
   const score = calculateScore(state);
   const tier = getScoreTier(score);
+  const allGear = getAllGear(state);
 
   useEffect(() => {
     if (!submitted.current) {
@@ -92,6 +95,30 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
             </div>
           </div>
         </div>
+
+        {allGear.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Gear Collected</span>
+              <span className="text-xs text-slate-400">{allGear.length} / 3</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allGear.map(id => {
+                const item = GEAR_MAP[id];
+                if (!item) return null;
+                const colors = RARITY_COLORS[item.rarity];
+                const isEquipped = state.equipped_gear?.includes(id);
+                return (
+                  <div key={id} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${colors.border} ${colors.bg}`}>
+                    <GearIcon name={item.icon} className={`w-3 h-3 ${colors.text}`} />
+                    <span className={`text-xs font-semibold ${colors.text}`}>{item.name}</span>
+                    {isEquipped && <span className="text-xs text-slate-500 italic">start</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">

@@ -1,8 +1,27 @@
 import type { GameState } from '../types/game';
 import { ASSET_MAP } from '../constants/assets';
+import type { GearItemId } from '../constants/items';
+import { GEAR_MAP } from '../constants/items';
+
+const GEAR_SCORE_BONUS: Record<string, number> = {
+  common: 300,
+  uncommon: 800,
+  rare: 2000,
+  legendary: 5000,
+};
+
+export function calculateGearBonus(gearIds: GearItemId[]): number {
+  return gearIds.reduce((sum, id) => {
+    const item = GEAR_MAP[id];
+    return sum + (GEAR_SCORE_BONUS[item?.rarity ?? 'common'] ?? 0);
+  }, 0);
+}
 
 export function calculateScore(state: GameState): number {
-  return (state.current_cash + state.bank_savings) - (state.current_debt * 2);
+  const baseScore = (state.current_cash + state.bank_savings) - (state.current_debt * 2);
+  const allGear = [...(state.equipped_gear ?? []), ...(state.found_gear ?? [])].slice(0, 3);
+  const gearBonus = calculateGearBonus(allGear);
+  return baseScore + gearBonus;
 }
 
 export function calculateNetWorth(state: GameState): number {

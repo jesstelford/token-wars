@@ -16,20 +16,28 @@ import { BuyModal } from './components/Modals/BuyModal';
 import { SellModal } from './components/Modals/SellModal';
 import { TheftModal } from './components/Modals/TheftModal';
 import { FreeTokenModal } from './components/Modals/FreeTokenModal';
+import { ItemDropModal } from './components/Modals/ItemDropModal';
+import { VendorModal } from './components/Modals/VendorModal';
 import { TitleScreen } from './components/Screens/TitleScreen';
 import { GameOverScreen } from './components/Screens/GameOverScreen';
+import { GearLoadoutScreen } from './components/Screens/GearLoadoutScreen';
+import { GearPanel } from './components/Gear/GearPanel';
 
 import type { AssetId } from './constants/assets';
 import type { CommunityId } from './constants/communities';
 import type { ModalType } from './types/game';
+import type { GearItemId } from './constants/items';
+import { fetchUnlockedGear, getPlayerId } from './lib/gearUnlocks';
+import { computeGearEffects, getAllGear } from './utils/gearEffects';
 
 export default function App() {
   const [darkMode, setDarkMode] = useLocalStorage<boolean>('token_wars_theme', false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<AssetId | null>(null);
   const [financeTab, setFinanceTab] = useState<'debt' | 'deposit' | 'withdraw'>('debt');
-  const [screenPhase, setScreenPhase] = useState<'title' | 'game'>('title');
+  const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game'>('title');
   const [hoveredAssetId, setHoveredAssetId] = useState<AssetId | null>(null);
+  const [unlockedGear, setUnlockedGear] = useState<GearItemId[]>([]);
 
   const {
     state,
@@ -39,6 +47,10 @@ export default function App() {
     travel,
     dismissFreeToken,
     dismissTheft,
+    collectItem,
+    dismissItemDrop,
+    purchaseFromVendor,
+    declineVendor,
     finishGame,
     resolveEncounterRun,
     resolveEncounterFight,
@@ -63,13 +75,34 @@ export default function App() {
     }
   }, [darkMode]);
 
+  useEffect(() => {
+    const playerId = getPlayerId();
+    fetchUnlockedGear(playerId).then(setUnlockedGear);
+  }, []);
+
   function toggleDark() {
     setDarkMode(prev => !prev);
   }
 
   function handleNewGame() {
     clearSave();
-    startNewGame();
+    if (unlockedGear.length > 0) {
+      setScreenPhase('loadout');
+    } else {
+      startNewGame([], 0);
+      setScreenPhase('game');
+      setActiveModal(null);
+    }
+  }
+
+  function handleLoadoutStart(selectedGear: GearItemId[], extraDebt: number) {
+    startNewGame(selectedGear, extraDebt);
+    setScreenPhase('game');
+    setActiveModal(null);
+  }
+
+  function handleLoadoutSkip() {
+    startNewGame([], 0);
     setScreenPhase('game');
     setActiveModal(null);
   }
@@ -103,6 +136,9 @@ export default function App() {
     travel(communityId);
   }
 
+  const allGear = getAllGear(state);
+  const gearEffects = computeGearEffects(allGear);
+  const effectiveCapacity = state.capacity + gearEffects.capacityBonus;
   const usedCapacity = state.inventory.reduce((sum, i) => sum + i.quantity, 0);
   const isGameOver = state.game_phase === 'gameover';
 
@@ -112,6 +148,22 @@ export default function App() {
 
   const pendingTheft = state.pending_thefts?.[0] ?? null;
   const pendingFreeToken = state.pending_free_tokens?.[0] ?? null;
+  const pendingItemDrop = state.pending_item_drop ?? null;
+  const pendingVendor = state.pending_vendor ?? null;
+
+  const hasBlockingModal = pendingTheft || pendingFreeToken || pendingItemDrop || pendingVendor;
+
+  if (screenPhase === 'loadout') {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <GearLoadoutScreen
+          unlockedGearIds={unlockedGear}
+          onStart={handleLoadoutStart}
+          onSkip={handleLoadoutSkip}
+        />
+      </div>
+    );
+  }
 
   if (screenPhase === 'title' && !isGameOver) {
     return (
@@ -136,7 +188,6 @@ export default function App() {
           onSubmitScore={(name, updateLatest) => submitScore(name, updateLatest)}
           onNewGame={() => {
             handleNewGame();
-            setScreenPhase('title');
           }}
         />
       </div>
@@ -169,6 +220,12 @@ export default function App() {
               />
             </div>
           </div>
+
+          <GearPanel
+            equippedGear={state.equipped_gear ?? []}
+            foundGear={state.found_gear ?? []}
+          />
+
           <div className="flex flex-col sm:flex-1 sm:grid sm:grid-cols-2 gap-px sm:gap-2 sm:min-h-0">
             <MarketView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onBuy={handleBuyClick} />
             <InventoryView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onSell={handleSellClick} />
@@ -203,20 +260,38 @@ export default function App() {
           />
         )}
 
-        {activeModal === 'buy' && buyMarketEntry && !pendingTheft && !pendingFreeToken && (
+        {pendingItemDrop && !pendingTheft && !pendingFreeToken && (
+          <ItemDropModal
+            drop={pendingItemDrop}
+            state={state}
+            onCollect={collectItem}
+            onDismiss={dismissItemDrop}
+          />
+        )}
+
+        {pendingVendor && !pendingTheft && !pendingFreeToken && !pendingItemDrop && (
+          <VendorModal
+            vendor={pendingVendor}
+            state={state}
+            onPurchase={purchaseFromVendor}
+            onDecline={declineVendor}
+          />
+        )}
+
+        {activeModal === 'buy' && buyMarketEntry && !hasBlockingModal && (
           <BuyModal
             assetId={buyAssetId}
             marketEntry={buyMarketEntry}
             cash={state.current_cash}
             bankSavings={state.bank_savings}
             usedCapacity={usedCapacity}
-            totalCapacity={state.capacity}
+            totalCapacity={effectiveCapacity}
             onBuy={(id, qty) => { buyAsset(id, qty); setActiveModal(null); }}
             onClose={() => setActiveModal(null)}
           />
         )}
 
-        {activeModal === 'sell' && selectedAssetId && !pendingTheft && !pendingFreeToken && (() => {
+        {activeModal === 'sell' && selectedAssetId && !hasBlockingModal && (() => {
           const invItem = state.inventory.find(i => i.assetId === selectedAssetId);
           const mp = state.market_prices[selectedAssetId];
           if (!invItem || !mp) return null;
@@ -231,7 +306,7 @@ export default function App() {
           );
         })()}
 
-        {activeModal === 'finance' && !pendingTheft && !pendingFreeToken && (
+        {activeModal === 'finance' && !hasBlockingModal && (
           <FinanceModal
             cash={state.current_cash}
             bankSavings={state.bank_savings}

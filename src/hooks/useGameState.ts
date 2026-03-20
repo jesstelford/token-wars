@@ -6,18 +6,23 @@ import { ASSET_MAP } from '../constants/assets';
 import type { AssetId } from '../constants/assets';
 import type { CommunityId } from '../constants/communities';
 import { generateInitialPrices, generateInitialAvailableAssets, runMarketLoop } from '../utils/marketLoop';
-import { resolveRun, resolveFight } from '../utils/encounters';
+import { resolveRun, resolveFight, buildPartialInventoryLossWithGear } from '../utils/encounters';
 import { generateEventId } from '../utils/formatting';
 import { calculateScore } from '../utils/scoring';
+import { computeGearEffects, getAllGear, getScrapValue } from '../utils/gearEffects';
+import type { GearItemId } from '../constants/items';
+import { GEAR_MAP } from '../constants/items';
+import { unlockGear, getPlayerId } from '../lib/gearUnlocks';
 
 const SAVE_KEY = 'token_wars_save';
 const SCORES_KEY = 'token_wars_scores';
 
-function buildInitialState(): GameState {
+function buildInitialState(equippedGear: GearItemId[] = [], extraDebt: number = 0): GameState {
+  const startingDebt = INITIAL_DEBT + extraDebt;
   return {
     current_cash: INITIAL_DEBT,
     bank_savings: 0,
-    current_debt: INITIAL_DEBT,
+    current_debt: startingDebt,
     health: 100,
     current_day: 1,
     inventory: [],
@@ -28,13 +33,19 @@ function buildInitialState(): GameState {
     event_log: [{
       id: generateEventId(),
       type: 'info',
-      message: 'Simulation started. You have $5,500 in cash and owe $5,500. The clock is ticking.',
+      message: equippedGear.length > 0
+        ? `Simulation started with ${equippedGear.length} piece${equippedGear.length > 1 ? 's' : ''} of gear. Starting debt: $${startingDebt.toLocaleString()}.`
+        : 'Simulation started. You have $5,500 in cash and owe $5,500. The clock is ticking.',
       day: 1,
     }],
     game_phase: 'playing',
     encounter_state: null,
     pending_thefts: [],
     pending_free_tokens: [],
+    equipped_gear: equippedGear,
+    found_gear: [],
+    pending_item_drop: null,
+    pending_vendor: null,
   };
 }
 
@@ -46,8 +57,8 @@ export function useGameState() {
     return Boolean(localStorage.getItem(SAVE_KEY));
   }, []);
 
-  const startNewGame = useCallback(() => {
-    setState(buildInitialState());
+  const startNewGame = useCallback((equippedGear: GearItemId[] = [], extraDebt: number = 0) => {
+    setState(buildInitialState(equippedGear, extraDebt));
   }, [setState]);
 
   const travel = useCallback((targetCommunity: CommunityId) => {
@@ -56,7 +67,13 @@ export function useGameState() {
       if (prev.current_day >= MAX_DAYS) {
         return { ...prev, game_phase: 'gameover' };
       }
-      const { updatedState, robbedAmount, bankHackedAmount, freeTokenEvent } = runMarketLoop(prev, targetCommunity);
+
+      const allGear = getAllGear(prev);
+      const gearEffects = computeGearEffects(allGear);
+
+      const { updatedState, robbedAmount, bankHackedAmount, freeTokenEvent, pendingItemDrop, pendingVendor } =
+        runMarketLoop(prev, targetCommunity, gearEffects);
+
       const nextDay = (updatedState.current_day ?? prev.current_day);
 
       const pendingThefts: PendingTheft[] = [];
@@ -70,7 +87,15 @@ export function useGameState() {
       }
 
       const pendingFreeTokens: PendingFreeToken[] = freeTokenEvent ? [freeTokenEvent] : [];
-      const merged = { ...prev, ...updatedState, pending_thefts: pendingThefts, pending_free_tokens: pendingFreeTokens };
+      const merged = {
+        ...prev,
+        ...updatedState,
+        pending_thefts: pendingThefts,
+        pending_free_tokens: pendingFreeTokens,
+        pending_item_drop: pendingItemDrop ?? prev.pending_item_drop,
+        pending_vendor: pendingVendor ?? prev.pending_vendor,
+      };
+
       if (nextDay > MAX_DAYS) {
         return { ...merged, game_phase: 'gameover' };
       }
@@ -90,6 +115,87 @@ export function useGameState() {
       ...prev,
       pending_thefts: prev.pending_thefts.slice(1),
     }));
+  }, [setState]);
+
+  const collectItem = useCallback((itemId: GearItemId) => {
+    setState(prev => {
+      const allGear = getAllGear(prev);
+      const isDuplicate = allGear.includes(itemId);
+
+      if (isDuplicate) {
+        const scrapValue = getScrapValue(itemId);
+        const gearItem = GEAR_MAP[itemId];
+        const newEvent = {
+          id: generateEventId(),
+          type: 'gear_found' as const,
+          message: `Duplicate ${gearItem?.name ?? itemId} scrapped for $${scrapValue.toLocaleString()}.`,
+          day: prev.current_day,
+        };
+        return {
+          ...prev,
+          current_cash: prev.current_cash + scrapValue,
+          pending_item_drop: null,
+          event_log: [newEvent, ...prev.event_log].slice(0, 20),
+        };
+      }
+
+      if (allGear.length >= 3) {
+        return { ...prev, pending_item_drop: null };
+      }
+
+      const playerId = getPlayerId();
+      unlockGear(playerId, itemId);
+
+      const gearItem = GEAR_MAP[itemId];
+      const newEvent = {
+        id: generateEventId(),
+        type: 'gear_found' as const,
+        message: `Collected ${gearItem?.name ?? itemId}. Active effects applied.`,
+        day: prev.current_day,
+      };
+
+      return {
+        ...prev,
+        found_gear: [...prev.found_gear, itemId],
+        pending_item_drop: null,
+        event_log: [newEvent, ...prev.event_log].slice(0, 20),
+      };
+    });
+  }, [setState]);
+
+  const dismissItemDrop = useCallback(() => {
+    setState(prev => ({ ...prev, pending_item_drop: null }));
+  }, [setState]);
+
+  const purchaseFromVendor = useCallback((itemId: GearItemId, price: number) => {
+    setState(prev => {
+      const allGear = getAllGear(prev);
+      if (prev.current_cash < price) return prev;
+      if (allGear.length >= 3) return prev;
+
+      const playerId = getPlayerId();
+      unlockGear(playerId, itemId);
+
+      const gearItem = GEAR_MAP[itemId];
+      const newEvent = {
+        id: generateEventId(),
+        type: 'vendor' as const,
+        message: `Purchased ${gearItem?.name ?? itemId} from the vendor for $${price.toLocaleString()}.`,
+        day: prev.current_day,
+      };
+
+      return {
+        ...prev,
+        current_cash: prev.current_cash - price,
+        found_gear: [...prev.found_gear, itemId],
+        pending_vendor: null,
+        event_log: [newEvent, ...prev.event_log].slice(0, 20),
+      };
+    });
+  }, [setState]);
+
+  const declineVendor = useCallback(() => {
+    setState(prev => ({ ...prev, pending_vendor: null }));
   }, [setState]);
 
   const finishGame = useCallback(() => {
@@ -113,9 +219,11 @@ export function useGameState() {
   const resolveEncounterRun = useCallback((success: boolean) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const result = resolveRun(prev, success);
+      const allGear = getAllGear(prev);
+      const gearEffects = computeGearEffects(allGear);
+      const result = resolveRun(prev, success, gearEffects);
       const newInventory = result.lostInventory
-        ? buildPartialInventoryLoss(prev.inventory)
+        ? buildPartialInventoryLossWithGear(prev.inventory, gearEffects)
         : prev.inventory;
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
@@ -133,15 +241,23 @@ export function useGameState() {
   const resolveEncounterFight = useCallback((success: boolean, healthLost?: number) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const result = resolveFight(prev, success, healthLost);
+      const allGear = getAllGear(prev);
+      const gearEffects = computeGearEffects(allGear);
+      const result = resolveFight(prev, success, healthLost, gearEffects);
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
+
+      const pendingItemDrop = result.itemDrop
+        ? { itemId: result.itemDrop, source: 'ftc_win' as const }
+        : prev.pending_item_drop;
+
       return {
         ...prev,
         health: newHealth,
         event_log: newLog,
         game_phase: result.terminated ? 'gameover' : 'playing',
         encounter_state: null,
+        pending_item_drop: pendingItemDrop,
       };
     });
   }, [setState]);
@@ -153,7 +269,10 @@ export function useGameState() {
       const totalCost = marketEntry.price * quantity;
       if (totalCost > prev.current_cash) return prev;
       const usedCapacity = prev.inventory.reduce((sum, i) => sum + i.quantity, 0);
-      if (usedCapacity + quantity > prev.capacity) return prev;
+      const allGear = getAllGear(prev);
+      const gearEffects = computeGearEffects(allGear);
+      const effectiveCapacity = prev.capacity + gearEffects.capacityBonus;
+      if (usedCapacity + quantity > effectiveCapacity) return prev;
       const existingIndex = prev.inventory.findIndex(i => i.assetId === assetId);
       let newInventory = [...prev.inventory];
       if (existingIndex >= 0) {
@@ -267,11 +386,13 @@ export function useGameState() {
 
   const submitScore = useCallback((playerName: string, updateLatest?: boolean) => {
     setScores(prev => {
+      const allGear = getAllGear(state);
       const entry: HighScoreEntry = {
         name: playerName.trim() || 'Anon',
         score: calculateScore(state),
         date: new Date().toLocaleDateString(),
         days_survived: state.current_day,
+        gear_collected: allGear,
       };
       if (updateLatest) {
         const targetScore = entry.score;
@@ -298,6 +419,10 @@ export function useGameState() {
     travel,
     dismissFreeToken,
     dismissTheft,
+    collectItem,
+    dismissItemDrop,
+    purchaseFromVendor,
+    declineVendor,
     finishGame,
     resolveEncounterRun,
     resolveEncounterFight,
@@ -309,19 +434,4 @@ export function useGameState() {
     submitScore,
     clearSave,
   };
-}
-
-function buildPartialInventoryLoss(inventory: GameState['inventory']): GameState['inventory'] {
-  if (inventory.length === 0) return inventory;
-  const shuffled = [...inventory].sort(() => Math.random() - 0.5);
-  const numToAffect = 1 + Math.floor(Math.random() * shuffled.length);
-  const affected = new Set(shuffled.slice(0, numToAffect).map(i => i.assetId));
-  const lossFraction = 0.5 + Math.random() * 0.5;
-  return inventory
-    .map(item => {
-      if (!affected.has(item.assetId)) return item;
-      const lost = Math.ceil(item.quantity * lossFraction);
-      return { ...item, quantity: item.quantity - lost };
-    })
-    .filter(item => item.quantity > 0);
 }

@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import type { EncounterState } from '../../types/game';
+import type { GearItemId } from '../../constants/items';
+import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
+import { GearIcon } from '../Gear/GearIcon';
 
 interface EncounterModalProps {
   encounter: EncounterState;
@@ -14,6 +17,7 @@ interface Result {
   success: boolean;
   message: string;
   healthLost?: number;
+  itemDrop?: GearItemId;
 }
 
 const RUN_SUCCESS_RATE = 0.60;
@@ -39,6 +43,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
   function handleFight() {
     const success = Math.random() < FIGHT_SUCCESS_RATE;
     const healthLost = success ? 0 : 40 + Math.floor(Math.random() * 11);
+    const itemDrop = encounter.pendingItemDrop;
     setDecision('fight');
     setResolvedSuccess(success);
     setResult({
@@ -47,6 +52,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
       message: success
         ? 'You outmaneuvered them legally. Assets retained, no damage taken.'
         : `You lost the fight. You took ${healthLost} health damage.`,
+      itemDrop: success ? itemDrop : undefined,
     });
   }
 
@@ -95,7 +101,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
             </>
           ) : (
             <>
-              <div className={`flex items-start gap-3 p-4 rounded-lg mb-5 ${
+              <div className={`flex items-start gap-3 p-4 rounded-lg mb-4 ${
                 result.success
                   ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
                   : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
@@ -113,6 +119,28 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{result.message}</p>
                 </div>
               </div>
+
+              {result.success && result.itemDrop && (() => {
+                const item = GEAR_MAP[result.itemDrop];
+                if (!item) return null;
+                const colors = RARITY_COLORS[item.rarity];
+                return (
+                  <div className="mb-4 p-3 rounded-lg bg-slate-800 border border-slate-700 flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${colors.border} ${colors.bg} shrink-0`}>
+                      <GearIcon name={item.icon} className={`w-3.5 h-3.5 ${colors.text}`} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span className="text-xs text-amber-400 font-semibold">Spoils of victory</span>
+                      </div>
+                      <p className="text-sm font-semibold text-white">{item.name}</p>
+                      <p className="text-xs text-slate-400">{item.effectSummary}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <button
                 onClick={handleContinue}
                 className="w-full py-2.5 rounded-lg bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
