@@ -2,7 +2,6 @@ import { ArrowRight, X, ShoppingCart, MapPin, TrendingUp, CreditCard, CheckCircl
 import type { TutorialStep } from '../../types/game';
 import { formatCurrencyFull } from '../../utils/formatting';
 import {
-  TUTORIAL_QUANTITY,
   TUTORIAL_BUY_PRICE,
   TUTORIAL_SELL_PRICE,
 } from '../../hooks/useTutorial';
@@ -11,33 +10,33 @@ interface TutorialStepConfig {
   icon: React.ReactNode;
   title: string;
   instruction: string;
-  highlight: string;
+  subInstruction: string;
 }
 
 const STEP_CONFIGS: Record<Exclude<TutorialStep, 'complete'>, TutorialStepConfig> = {
   buy: {
-    icon: <ShoppingCart className="w-5 h-5" />,
-    title: 'Step 1 of 4 — Buy',
-    instruction: `Buy ${TUTORIAL_QUANTITY} Grok tokens at ${formatCurrencyFull(TUTORIAL_BUY_PRICE)} each`,
-    highlight: 'market',
+    icon: <ShoppingCart className="w-4 h-4" />,
+    title: 'Step 1 of 4 — Buy Low',
+    instruction: `Buy Grok tokens at ${formatCurrencyFull(TUTORIAL_BUY_PRICE)} each`,
+    subInstruction: 'Click the Buy button in the Market panel below',
   },
   travel: {
-    icon: <MapPin className="w-5 h-5" />,
+    icon: <MapPin className="w-4 h-4" />,
     title: 'Step 2 of 4 — Travel',
-    instruction: 'Travel to Reddit to sell for a higher price',
-    highlight: 'travel',
+    instruction: 'Travel to Reddit',
+    subInstruction: 'Click Reddit in the Travel panel to move there',
   },
   sell: {
-    icon: <TrendingUp className="w-5 h-5" />,
-    title: 'Step 3 of 4 — Sell',
-    instruction: `Sell your Grok tokens at ${formatCurrencyFull(TUTORIAL_SELL_PRICE)} each`,
-    highlight: 'inventory',
+    icon: <TrendingUp className="w-4 h-4" />,
+    title: 'Step 3 of 4 — Sell High',
+    instruction: `Sell Grok at ${formatCurrencyFull(TUTORIAL_SELL_PRICE)} each`,
+    subInstruction: 'Click Sell in the Inventory panel below',
   },
   pay_debt: {
-    icon: <CreditCard className="w-5 h-5" />,
+    icon: <CreditCard className="w-4 h-4" />,
     title: 'Step 4 of 4 — Pay Debt',
-    instruction: 'Click Debt to open the finance panel and pay it down',
-    highlight: 'debt',
+    instruction: 'Pay down some debt',
+    subInstruction: 'Click the Debt button in the Stats panel above',
   },
 };
 
@@ -61,7 +60,7 @@ function TutorialComplete({ startingDebt, currentDebt, profit, onStartGame, onSk
         className="max-w-sm w-full mx-4 overflow-hidden shadow-2xl"
         style={{
           background: 'var(--modal-bg)',
-          border: 'var(--modal-border-style) var(--color-accent)',
+          border: '2px solid var(--color-accent)',
           borderRadius: 'var(--modal-radius)',
           animation: 'tutorialSlideUp 0.35s ease-out',
         }}
@@ -111,10 +110,17 @@ function TutorialComplete({ startingDebt, currentDebt, profit, onStartGame, onSk
 
           <div
             className="rounded-lg px-4 py-3 text-center"
-            style={{ background: 'var(--color-accent)', opacity: 0.95 }}
+            style={{
+              background: 'var(--color-bg-raised)',
+              border: '1px solid var(--color-border)',
+              borderLeft: '3px solid var(--color-accent)',
+            }}
           >
-            <p className="text-sm font-bold" style={{ color: 'var(--color-text-inverse)', fontFamily: 'var(--font-heading)', letterSpacing: '0.02em' }}>
-              Buy low. Travel. Sell high. Pay debt. Repeat.
+            <p
+              className="text-sm font-semibold italic"
+              style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}
+            >
+              "Buy low. Travel. Sell high. Pay debt. Repeat."
             </p>
           </div>
 
@@ -151,20 +157,18 @@ interface TutorialCalloutProps {
 function TutorialCallout({ step, onSkip }: TutorialCalloutProps) {
   const config = STEP_CONFIGS[step];
 
-  const positionClass =
+  const positionStyles: React.CSSProperties =
     step === 'buy' || step === 'sell'
-      ? 'bottom-[calc(50%+2rem)] left-1/2 -translate-x-1/2'
-      : step === 'travel'
-      ? 'top-[calc(50%+2rem)] right-4'
-      : 'top-[8.5rem] left-4';
+      ? { top: '4.5rem', left: '50%', transform: 'translateX(-50%)' }
+      : { bottom: '5rem', left: '50%', transform: 'translateX(-50%)' };
 
   return (
     <div
-      className={`fixed z-[101] ${positionClass} pointer-events-auto`}
-      style={{ animation: 'tutorialSlideUp 0.25s ease-out' }}
+      className="fixed z-[51] pointer-events-auto"
+      style={{ ...positionStyles, animation: 'tutorialSlideUp 0.25s ease-out' }}
     >
       <div
-        className="shadow-2xl w-72"
+        className="shadow-2xl w-64"
         style={{
           background: 'var(--modal-bg)',
           border: '2px solid var(--color-accent)',
@@ -172,10 +176,10 @@ function TutorialCallout({ step, onSkip }: TutorialCalloutProps) {
         }}
       >
         <div
-          className="flex items-center justify-between px-4 py-2.5"
+          className="flex items-center justify-between px-3 py-2"
           style={{ background: 'var(--modal-header-bg)', borderBottom: '1px solid var(--color-border)' }}
         >
-          <div className="flex items-center gap-2" style={{ color: 'var(--color-accent)' }}>
+          <div className="flex items-center gap-1.5" style={{ color: 'var(--color-accent)' }}>
             {config.icon}
             <span className="text-xs font-bold uppercase tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>
               {config.title}
@@ -183,20 +187,21 @@ function TutorialCallout({ step, onSkip }: TutorialCalloutProps) {
           </div>
           <button
             onClick={onSkip}
-            className="text-xs hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+            className="hover:opacity-70 transition-opacity ml-1"
+            style={{ color: 'var(--color-text-muted)' }}
+            aria-label="Skip tutorial"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="px-4 py-3">
-          <p className="text-sm leading-snug" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)' }}>
+        <div className="px-3 py-2.5 space-y-1.5">
+          <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)' }}>
             {config.instruction}
           </p>
-          <div className="flex items-center gap-1 mt-2" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
-            <ArrowRight className="w-3.5 h-3.5 animate-pulse" />
-            <span className="text-xs" style={{ fontFamily: 'var(--font-body)' }}>Click the highlighted element below</span>
-          </div>
+          <p className="text-xs leading-snug flex items-start gap-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>
+            <ArrowRight className="w-3 h-3 mt-0.5 shrink-0" style={{ color: 'var(--color-accent)' }} />
+            {config.subInstruction}
+          </p>
         </div>
       </div>
     </div>
@@ -228,8 +233,8 @@ export function TutorialOverlay({ step, startingDebt, currentDebt, profit, onSta
   return (
     <>
       <div
-        className="fixed inset-0 z-[99] pointer-events-none"
-        style={{ background: 'rgba(0,0,0,0.45)' }}
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: 'rgba(0,0,0,0.45)', zIndex: 48 }}
       />
       <TutorialCallout step={step} onSkip={onSkip} />
     </>
