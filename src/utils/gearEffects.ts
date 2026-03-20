@@ -101,13 +101,13 @@ export function getStartingDebtCost(selectedGearIds: GearItemId[]): number {
   }, 0);
 }
 
-export function getAllGear(state: { equipped_gear: GearItemId[]; found_gear: GearItemId[] }): GearItemId[] {
-  const combined = [...state.equipped_gear, ...state.found_gear];
+export function getAllGear(state: { equipped_gear?: GearItemId[] | null; found_gear?: GearItemId[] | null }): GearItemId[] {
+  const combined = [...(state.equipped_gear ?? []), ...(state.found_gear ?? [])];
   return combined.slice(0, 3);
 }
 
-export function canAddGear(state: { equipped_gear: GearItemId[]; found_gear: GearItemId[] }): boolean {
-  return state.equipped_gear.length + state.found_gear.length < 3;
+export function canAddGear(state: { equipped_gear?: GearItemId[] | null; found_gear?: GearItemId[] | null }): boolean {
+  return (state.equipped_gear?.length ?? 0) + (state.found_gear?.length ?? 0) < 3;
 }
 
 export function getScrapValue(itemId: GearItemId): number {
