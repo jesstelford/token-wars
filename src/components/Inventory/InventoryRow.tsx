@@ -18,7 +18,11 @@ export function InventoryRow({ item, currentPrice, isAvailable, isExternalHover,
   const asset = ASSET_MAP[item.assetId];
   if (!asset) return null;
 
-  const diff = isAvailable && currentPrice != null && item.avgPurchasePrice > 0
+  const roundedAvg = Math.round(item.avgPurchasePrice);
+  const roundedPrice = currentPrice != null ? Math.round(currentPrice) : null;
+  const isAtParity = isAvailable && currentPrice != null && item.avgPurchasePrice > 0 && roundedAvg === roundedPrice;
+
+  const diff = isAvailable && currentPrice != null && item.avgPurchasePrice > 0 && !isAtParity
     ? currentPrice - item.avgPurchasePrice
     : 0;
 

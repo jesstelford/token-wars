@@ -18,15 +18,18 @@ export function TravelPanel({ currentCommunity, currentDay, onTravel, onFinish }
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex-none">
         <Navigation className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         <h2 className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Travel</h2>
-        <div className="flex items-center gap-1 ml-2">
-          <MapPin className="w-3 h-3 text-sky-500 shrink-0" />
-          <span className="text-xs font-semibold text-sky-700 dark:text-sky-300">{currentCommunityData?.name}</span>
+        <div className="ml-auto flex items-center gap-1">
+          {isLastDay ? (
+            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              Day 31 — Final Day
+            </span>
+          ) : (
+            <>
+              <MapPin className="w-3 h-3 text-sky-500 shrink-0" />
+              <span className="text-xs font-semibold text-sky-700 dark:text-sky-300">{currentCommunityData?.name}</span>
+            </>
+          )}
         </div>
-        {isLastDay && (
-          <span className="ml-auto flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-            Day 31 — Final Day
-          </span>
-        )}
       </div>
 
       <div className="relative flex-1 p-2">
@@ -66,9 +69,6 @@ export function TravelPanel({ currentCommunity, currentDay, onTravel, onFinish }
         )}
       </div>
 
-      <div className="px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 flex-none">
-        {isLastDay ? 'Sell remaining inventory and end the simulation' : 'Travel uses 1 day'}
-      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { GameState } from '../../types/game';
 import { calculateScore } from '../../utils/scoring';
 import { getScoreTier } from '../../utils/scoring';
 import { formatCurrencyFull } from '../../utils/formatting';
+import { Confetti } from './Confetti';
 
 interface GameOverScreenProps {
   state: GameState;
@@ -28,9 +29,15 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
     return sum + (mp ? mp.price * item.quantity : 0);
   }, 0);
 
+  const isWin = score >= 0;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md">
+    <div className={`relative min-h-screen flex flex-col items-center justify-center p-6 ${isWin ? 'bg-slate-50 dark:bg-slate-950' : 'bg-slate-200 dark:bg-slate-950'}`}>
+      {isWin && <Confetti />}
+      {!isWin && (
+        <div className="fixed inset-0 z-0 pointer-events-none" style={{ backdropFilter: 'grayscale(85%) brightness(0.75) contrast(0.9)' }} />
+      )}
+      <div className="relative z-20 w-full max-w-md" style={!isWin ? { filter: 'grayscale(60%) contrast(0.85) brightness(0.9)' } : undefined}>
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">
             {score >= 100000 ? '🏆' : score >= 0 ? '📊' : '💸'}
@@ -119,3 +126,4 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
     </div>
   );
 }
+
