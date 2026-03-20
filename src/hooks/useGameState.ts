@@ -63,10 +63,10 @@ export function useGameState() {
     });
   }, [setState]);
 
-  const resolveEncounterRun = useCallback(() => {
+  const resolveEncounterRun = useCallback((success: boolean) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const result = resolveRun(prev);
+      const result = resolveRun(prev, success);
       const newInventory = result.lostInventory ? [] : prev.inventory;
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
@@ -81,10 +81,10 @@ export function useGameState() {
     });
   }, [setState]);
 
-  const resolveEncounterFight = useCallback(() => {
+  const resolveEncounterFight = useCallback((success: boolean) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const result = resolveFight(prev);
+      const result = resolveFight(prev, success);
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
       return {

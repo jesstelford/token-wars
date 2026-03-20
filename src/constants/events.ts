@@ -42,6 +42,19 @@ export const RESOURCE_INFLUX_TEMPLATES = [
   'You found {Quantity} {Company} tokens in an old {Community} thread. Someone forgot to claim them.',
 ];
 
+export const POSITIVE_EVENT_TEMPLATES = [
+  'You found {Quantity} {Company} tokens on an old laptop you dug out of storage.',
+  'You won the {Community} giveaway! {Quantity} {Company} tokens have been deposited.',
+  'A {Company} dev airdropped {Quantity} tokens to loyal holders in {Community}. You qualified.',
+  'You completed a {Company} bug bounty in {Community} and earned {Quantity} tokens.',
+  'Someone left {Quantity} {Company} tokens unclaimed in an old {Community} thread. They\'re yours now.',
+  'A whale in {Community} is giving away {Quantity} {Company} tokens for good vibes. You qualify.',
+  'You helped moderate a {Community} server and got tipped {Quantity} {Company} tokens.',
+  'A {Company} ambassador liked your post in {Community}. {Quantity} tokens as a thank you.',
+  'You found a forgotten wallet with {Quantity} {Company} tokens while browsing {Community}.',
+  '{Company} ran a referral campaign in {Community}. Your referral chain earned you {Quantity} tokens.',
+];
+
 export const FTC_TEMPLATES = [
   'The FTC is raiding {Community}! Run or Stay and Fight?',
   'Plainclothes regulators just swept into {Community}. Do you run or stand your ground?',

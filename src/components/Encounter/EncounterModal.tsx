@@ -4,8 +4,8 @@ import type { EncounterState } from '../../types/game';
 
 interface EncounterModalProps {
   encounter: EncounterState;
-  onRun: () => void;
-  onFight: () => void;
+  onRun: (success: boolean) => void;
+  onFight: (success: boolean) => void;
 }
 
 type Decision = 'run' | 'fight' | null;
@@ -21,10 +21,12 @@ const FIGHT_SUCCESS_RATE = 0.30;
 export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProps) {
   const [decision, setDecision] = useState<Decision>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [resolvedSuccess, setResolvedSuccess] = useState<boolean>(false);
 
   function handleRun() {
     const success = Math.random() < RUN_SUCCESS_RATE;
     setDecision('run');
+    setResolvedSuccess(success);
     setResult({
       success,
       message: success
@@ -36,6 +38,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
   function handleFight() {
     const success = Math.random() < FIGHT_SUCCESS_RATE;
     setDecision('fight');
+    setResolvedSuccess(success);
     setResult({
       success,
       message: success
@@ -46,9 +49,9 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
 
   function handleContinue() {
     if (decision === 'run') {
-      onRun();
+      onRun(resolvedSuccess);
     } else if (decision === 'fight') {
-      onFight();
+      onFight(resolvedSuccess);
     }
   }
 

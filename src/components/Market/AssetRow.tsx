@@ -35,27 +35,27 @@ export function AssetRow({ assetId, marketEntry, isExternalHover, onBuy, onMouse
       className={`group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${rowBg} ${externalHoverClass}`}
     >
       <td className="px-3 py-1.5">
-        <div className="flex items-center gap-1.5">
+        <span className={`text-xs font-semibold ${isAnomaly ? (anomalyType === 'surge' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300') : 'text-slate-800 dark:text-slate-100'}`}>
+          {asset.name}
+        </span>
+      </td>
+      <td className="px-3 py-1.5 text-right">
+        <div className="inline-flex items-center justify-end gap-1">
           {isAnomaly && (
             anomalyType === 'surge'
               ? <TrendingUp className="w-3 h-3 text-amber-500 shrink-0" />
               : <TrendingDown className="w-3 h-3 text-red-500 shrink-0" />
           )}
-          <span className={`text-xs font-semibold ${isAnomaly ? (anomalyType === 'surge' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300') : 'text-slate-800 dark:text-slate-100'}`}>
-            {asset.name}
+          <span className={`font-mono text-xs font-bold ${
+            isAnomaly
+              ? anomalyType === 'surge'
+                ? 'text-amber-600 dark:text-amber-300'
+                : 'text-red-600 dark:text-red-400'
+              : 'text-slate-700 dark:text-slate-200'
+          }`}>
+            {formatCurrencyFull(price)}
           </span>
         </div>
-      </td>
-      <td className="px-3 py-1.5 text-right">
-        <span className={`font-mono text-xs font-bold ${
-          isAnomaly
-            ? anomalyType === 'surge'
-              ? 'text-amber-600 dark:text-amber-300'
-              : 'text-red-600 dark:text-red-400'
-            : 'text-slate-700 dark:text-slate-200'
-        }`}>
-          {formatCurrencyFull(price)}
-        </span>
       </td>
       <td className="px-2 py-1.5 text-right w-16">
         <span

@@ -171,8 +171,8 @@ export default function App() {
         {state.game_phase === 'encounter' && state.encounter_state && (
           <EncounterModal
             encounter={state.encounter_state}
-            onRun={resolveEncounterRun}
-            onFight={resolveEncounterFight}
+            onRun={(success) => resolveEncounterRun(success)}
+            onFight={(success) => resolveEncounterFight(success)}
           />
         )}
 

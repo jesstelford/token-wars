@@ -1,6 +1,6 @@
-import { ASSETS, ANOMALY_PROBABILITY, DEBT_INTEREST_RATE, BANK_INTEREST_RATE, ROBBERY_PROBABILITY, ROBBERY_MAX_FRACTION, BANK_HACK_PROBABILITY, BANK_HACK_MAX_FRACTION, FTC_BASE_PROBABILITY } from '../constants/assets';
+import { ASSETS, ANOMALY_PROBABILITY, DEBT_INTEREST_RATE, BANK_INTEREST_RATE, ROBBERY_PROBABILITY, ROBBERY_MAX_FRACTION, BANK_HACK_PROBABILITY, BANK_HACK_MAX_FRACTION, FTC_BASE_PROBABILITY, POSITIVE_EVENT_PROBABILITY } from '../constants/assets';
 import { COMMUNITY_MAP } from '../constants/communities';
-import { SURGE_TEMPLATES, CRASH_TEMPLATES, ROBBERY_TEMPLATES, BANK_HACK_TEMPLATES, FTC_TEMPLATES, pickRandom, fillTemplate } from '../constants/events';
+import { SURGE_TEMPLATES, CRASH_TEMPLATES, ROBBERY_TEMPLATES, BANK_HACK_TEMPLATES, FTC_TEMPLATES, POSITIVE_EVENT_TEMPLATES, pickRandom, fillTemplate } from '../constants/events';
 import type { GameState, GameEvent, MarketPrice, EncounterState } from '../types/game';
 import type { AssetId } from '../constants/assets';
 import type { CommunityId } from '../constants/communities';
@@ -49,6 +49,7 @@ export function runMarketLoop(state: GameState, targetCommunity: CommunityId): M
   let encounter: EncounterState | null = null;
   let robbedAmount = 0;
   let bankHackedAmount = 0;
+  let updatedInventory = [...state.inventory];
 
   const communityData = COMMUNITY_MAP[targetCommunity];
   const communityName = communityData.name;
@@ -110,6 +111,42 @@ export function runMarketLoop(state: GameState, targetCommunity: CommunityId): M
     }
   }
 
+  if (Math.random() < POSITIVE_EVENT_PROBABILITY) {
+    const eligibleAssets = ASSETS.filter(a => availableAssets.includes(a.id as AssetId));
+    const chosenAsset = eligibleAssets[Math.floor(Math.random() * eligibleAssets.length)];
+    const tier = chosenAsset.tier as 1 | 2 | 3 | 4;
+    const quantityRanges: Record<1 | 2 | 3 | 4, [number, number]> = {
+      1: [1, 3],
+      2: [3, 8],
+      3: [10, 25],
+      4: [30, 80],
+    };
+    const [minQ, maxQ] = quantityRanges[tier];
+    const quantity = minQ + Math.floor(Math.random() * (maxQ - minQ + 1));
+    const usedCapacity = updatedInventory.reduce((sum, i) => sum + i.quantity, 0);
+    const freeCapacity = state.capacity - usedCapacity;
+    const actualQuantity = Math.min(quantity, freeCapacity);
+    if (actualQuantity > 0) {
+      const assetId = chosenAsset.id as AssetId;
+      const existingIdx = updatedInventory.findIndex(i => i.assetId === assetId);
+      if (existingIdx >= 0) {
+        const existing = updatedInventory[existingIdx];
+        updatedInventory = updatedInventory.map((item, idx) =>
+          idx === existingIdx ? { ...item, quantity: item.quantity + actualQuantity } : item
+        );
+        void existing;
+      } else {
+        updatedInventory = [...updatedInventory, { assetId, quantity: actualQuantity, avgPurchasePrice: 0 }];
+      }
+      const msg = fillTemplate(pickRandom(POSITIVE_EVENT_TEMPLATES), {
+        Company: chosenAsset.name,
+        Community: communityName,
+        Quantity: String(actualQuantity),
+      });
+      newEvents.push({ id: generateEventId(), type: 'resource_influx', message: msg, day: state.current_day + 1 });
+    }
+  }
+
   const ftcProbability = FTC_BASE_PROBABILITY + communityData.ftcVariance;
   if (Math.random() < ftcProbability) {
     const msg = fillTemplate(pickRandom(FTC_TEMPLATES), { Community: communityName });
@@ -124,6 +161,7 @@ export function runMarketLoop(state: GameState, targetCommunity: CommunityId): M
     bank_savings: updatedBankSavings,
     current_cash: updatedCash,
     health: updatedHealth,
+    inventory: updatedInventory,
     market_prices: newPrices as Record<AssetId, MarketPrice>,
     available_assets: availableAssets,
     current_community: targetCommunity,

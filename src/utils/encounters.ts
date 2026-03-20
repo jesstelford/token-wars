@@ -2,8 +2,6 @@ import type { GameState } from '../types/game';
 import { generateEventId } from './formatting';
 import type { GameEvent } from '../types/game';
 
-const RUN_SUCCESS_RATE = 0.60;
-const FIGHT_SUCCESS_RATE = 0.30;
 const RUN_FAIL_HEALTH_LOSS = 20;
 const FIGHT_FAIL_HEALTH_LOSS = 50;
 
@@ -16,8 +14,7 @@ export interface EncounterResult {
   event: GameEvent;
 }
 
-export function resolveRun(state: GameState): EncounterResult {
-  const success = Math.random() < RUN_SUCCESS_RATE;
+export function resolveRun(state: GameState, success: boolean): EncounterResult {
   if (success) {
     return {
       success: true,
@@ -40,8 +37,7 @@ export function resolveRun(state: GameState): EncounterResult {
   }
 }
 
-export function resolveFight(state: GameState): EncounterResult {
-  const success = Math.random() < FIGHT_SUCCESS_RATE;
+export function resolveFight(state: GameState, success: boolean): EncounterResult {
   if (success) {
     return {
       success: true,
