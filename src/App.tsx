@@ -14,6 +14,7 @@ import { EncounterModal } from './components/Encounter/EncounterModal';
 import { FinanceModal } from './components/Finance/FinanceModal';
 import { BuyModal } from './components/Modals/BuyModal';
 import { SellModal } from './components/Modals/SellModal';
+import { TheftModal } from './components/Modals/TheftModal';
 import { TitleScreen } from './components/Screens/TitleScreen';
 import { GameOverScreen } from './components/Screens/GameOverScreen';
 
@@ -35,6 +36,8 @@ export default function App() {
     hasSave,
     startNewGame,
     travel,
+    dismissTheft,
+    finishGame,
     resolveEncounterRun,
     resolveEncounterFight,
     buyAsset,
@@ -105,6 +108,8 @@ export default function App() {
   const buyAssetId: AssetId = selectedAssetId ?? firstAssetId ?? 'grok';
   const buyMarketEntry = state.market_prices[buyAssetId];
 
+  const pendingTheft = state.pending_thefts?.[0] ?? null;
+
   if (screenPhase === 'title' && !isGameOver) {
     return (
       <div className={darkMode ? 'dark' : ''}>
@@ -139,7 +144,7 @@ export default function App() {
     <div className={darkMode ? 'dark' : ''}>
       <div
         className="flex flex-col bg-slate-100 dark:bg-slate-950 sm:overflow-hidden"
-        style={{ height: '100dvh', maxWidth: '1400px', margin: '0 auto' }}
+        style={{ height: '100dvh', maxWidth: '1024px', margin: '0 auto' }}
       >
         <Header darkMode={darkMode} onToggleDark={toggleDark} />
 
@@ -157,6 +162,7 @@ export default function App() {
                 currentCommunity={state.current_community}
                 currentDay={state.current_day}
                 onTravel={handleTravel}
+                onFinish={finishGame}
               />
             </div>
           </div>
@@ -168,7 +174,7 @@ export default function App() {
 
         <EventLog events={state.event_log} />
 
-        {state.game_phase === 'encounter' && state.encounter_state && (
+        {state.game_phase === 'encounter' && state.encounter_state && !pendingTheft && (
           <EncounterModal
             encounter={state.encounter_state}
             onRun={(success) => resolveEncounterRun(success)}
@@ -176,7 +182,16 @@ export default function App() {
           />
         )}
 
-        {activeModal === 'buy' && buyMarketEntry && (
+        {pendingTheft && (
+          <TheftModal
+            type={pendingTheft.type}
+            amountLost={pendingTheft.amountLost}
+            newTotal={pendingTheft.newTotal}
+            onClose={dismissTheft}
+          />
+        )}
+
+        {activeModal === 'buy' && buyMarketEntry && !pendingTheft && (
           <BuyModal
             assetId={buyAssetId}
             marketEntry={buyMarketEntry}
@@ -188,7 +203,7 @@ export default function App() {
           />
         )}
 
-        {activeModal === 'sell' && selectedAssetId && (() => {
+        {activeModal === 'sell' && selectedAssetId && !pendingTheft && (() => {
           const invItem = state.inventory.find(i => i.assetId === selectedAssetId);
           const mp = state.market_prices[selectedAssetId];
           if (!invItem || !mp) return null;
@@ -203,14 +218,14 @@ export default function App() {
           );
         })()}
 
-        {activeModal === 'finance' && (
+        {activeModal === 'finance' && !pendingTheft && (
           <FinanceModal
             cash={state.current_cash}
             bankSavings={state.bank_savings}
             debt={state.current_debt}
             initialTab={financeTab}
             onClose={() => setActiveModal(null)}
-            onPayDebt={amount => { payDebt(amount); }}
+            onPayDebt={amount => { payDebt(amount); setActiveModal(null); }}
             onDeposit={amount => { deposit(amount); }}
             onWithdraw={amount => { withdraw(amount); }}
           />

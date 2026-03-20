@@ -16,17 +16,34 @@ interface BuyModalProps {
 }
 
 export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapacity, onBuy, onClose }: BuyModalProps) {
-  const [quantity, setQuantity] = useState(1);
   const asset = ASSET_MAP[assetId];
   const price = marketEntry.price;
   const maxByCapacity = totalCapacity - usedCapacity;
   const maxByFunds = Math.floor(cash / price);
   const maxQty = Math.min(maxByCapacity, maxByFunds);
+
+  const [inputStr, setInputStr] = useState('1');
+  const quantity = parseInt(inputStr) || 0;
   const totalCost = price * quantity;
-  const canAfford = totalCost <= cash && quantity <= maxByCapacity && quantity > 0;
+  const canAfford = quantity > 0 && totalCost <= cash && quantity <= maxByCapacity;
 
   const atMin = quantity <= 1;
   const atMax = quantity >= maxQty;
+
+  function handleDecrement() {
+    setInputStr(String(Math.max(1, quantity - 1)));
+  }
+
+  function handleIncrement() {
+    setInputStr(String(Math.min(maxQty, quantity + 1)));
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    if (val === '') { setInputStr(''); return; }
+    const parsed = parseInt(val);
+    if (!isNaN(parsed)) setInputStr(String(Math.min(maxQty, Math.max(1, parsed))));
+  }
 
   function handleBuy() {
     if (!canAfford) return;
@@ -79,7 +96,7 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              onClick={handleDecrement}
               disabled={atMin}
               className={`w-9 h-9 rounded-lg border flex items-center justify-center font-bold transition-colors ${
                 atMin
@@ -93,12 +110,12 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
               type="number"
               min={1}
               max={maxQty}
-              value={quantity}
-              onChange={e => setQuantity(Math.min(maxQty, Math.max(1, parseInt(e.target.value) || 1)))}
+              value={inputStr}
+              onChange={handleInputChange}
               className="flex-1 text-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
             <button
-              onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
+              onClick={handleIncrement}
               disabled={atMax}
               className={`w-9 h-9 rounded-lg border flex items-center justify-center font-bold transition-colors ${
                 atMax
@@ -109,7 +126,7 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
               <Plus className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={() => setQuantity(maxQty)}
+              onClick={() => setInputStr(String(maxQty))}
               disabled={atMax}
               className={`px-3 py-2 text-xs font-bold border rounded-lg transition-colors ${
                 atMax
@@ -133,7 +150,7 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
             disabled={!canAfford || maxQty <= 0}
             className="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors"
           >
-            {maxQty <= 0 ? 'Cannot Afford / No Space' : `Buy ${quantity} unit${quantity !== 1 ? 's' : ''}`}
+            {maxQty <= 0 ? 'Cannot Afford / No Space' : `Buy ${quantity || 0} unit${quantity !== 1 ? 's' : ''}`}
           </button>
         </div>
       </div>

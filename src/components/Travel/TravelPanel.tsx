@@ -1,4 +1,4 @@
-import { MapPin, Navigation, AlertTriangle } from 'lucide-react';
+import { MapPin, Navigation, CheckCircle } from 'lucide-react';
 import { COMMUNITIES } from '../../constants/communities';
 import type { CommunityId } from '../../constants/communities';
 
@@ -6,9 +6,10 @@ interface TravelPanelProps {
   currentCommunity: CommunityId;
   currentDay: number;
   onTravel: (communityId: CommunityId) => void;
+  onFinish: () => void;
 }
 
-export function TravelPanel({ currentCommunity, currentDay, onTravel }: TravelPanelProps) {
+export function TravelPanel({ currentCommunity, currentDay, onTravel, onFinish }: TravelPanelProps) {
   const isLastDay = currentDay >= 31;
   const currentCommunityData = COMMUNITIES.find(c => c.id === currentCommunity);
 
@@ -22,41 +23,51 @@ export function TravelPanel({ currentCommunity, currentDay, onTravel }: TravelPa
           <span className="text-xs font-semibold text-sky-700 dark:text-sky-300">{currentCommunityData?.name}</span>
         </div>
         {isLastDay && (
-          <span className="ml-auto flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-            <AlertTriangle className="w-3 h-3" />
-            Final day
+          <span className="ml-auto flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            Day 31 — Final Day
           </span>
         )}
       </div>
 
-      <div className="flex-1 p-2 grid grid-cols-2 gap-1 content-start">
-        {COMMUNITIES.map(community => {
-          const isCurrent = community.id === currentCommunity;
+      <div className="relative flex-1 p-2">
+        <div className={`grid grid-cols-2 gap-1 content-start ${isLastDay ? 'blur-sm pointer-events-none select-none' : ''}`}>
+          {COMMUNITIES.map(community => {
+            const isCurrent = community.id === currentCommunity;
+            return (
+              <button
+                key={community.id}
+                onClick={() => !isCurrent && onTravel(community.id as CommunityId)}
+                disabled={isCurrent}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-left transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                  isCurrent
+                    ? 'bg-sky-100 dark:bg-sky-900/40 border border-sky-300 dark:border-sky-700 cursor-default'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer'
+                }`}
+              >
+                <MapPin className={`w-3 h-3 shrink-0 ${isCurrent ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'}`} />
+                <span className={`text-xs font-medium truncate ${isCurrent ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                  {community.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-          return (
+        {isLastDay && (
+          <div className="absolute inset-0 flex items-center justify-center p-2">
             <button
-              key={community.id}
-              onClick={() => !isCurrent && !isLastDay && onTravel(community.id as CommunityId)}
-              disabled={isCurrent || isLastDay}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-left transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                isCurrent
-                  ? 'bg-sky-100 dark:bg-sky-900/40 border border-sky-300 dark:border-sky-700 cursor-default'
-                  : isLastDay
-                  ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-800 border border-transparent'
-                  : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer'
-              }`}
+              onClick={onFinish}
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
             >
-              <MapPin className={`w-3 h-3 shrink-0 ${isCurrent ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'}`} />
-              <span className={`text-xs font-medium truncate ${isCurrent ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                {community.name}
-              </span>
+              <CheckCircle className="w-4 h-4" />
+              Finish Game
             </button>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       <div className="px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 flex-none">
-        Travel uses 1 day
+        {isLastDay ? 'Sell remaining inventory and end the simulation' : 'Travel uses 1 day'}
       </div>
     </div>
   );

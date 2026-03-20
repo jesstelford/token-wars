@@ -31,7 +31,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
       success,
       message: success
         ? 'You slipped away before they could catch you. Close call.'
-        : 'They caught you. You lost all your inventory and took 20 health damage.',
+        : 'They caught you. Some of your inventory was seized and you took 20 health damage.',
     });
   }
 
@@ -43,7 +43,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
       success,
       message: success
         ? 'You outmaneuvered them legally. Assets retained, no damage taken.'
-        : 'You lost the fight. You took 50 health damage.',
+        : 'You lost the fight. You took between 40 and 50 health damage.',
     });
   }
 
@@ -77,7 +77,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
                 >
                   <span className="text-2xl">🏃</span>
                   <span className="font-bold text-sky-700 dark:text-sky-300">Run</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">60% success. Fail: lose all inventory + 20 health</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">60% success. Fail: lose 50–100% of some inventory + 20 health</span>
                 </button>
 
                 <button
@@ -86,7 +86,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
                 >
                   <span className="text-2xl">⚖️</span>
                   <span className="font-bold text-red-700 dark:text-red-300">Fight</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">30% success. Fail: 50 health or terminated</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 text-center">30% success. Fail: 40–50 health or terminated</span>
                 </button>
               </div>
             </>

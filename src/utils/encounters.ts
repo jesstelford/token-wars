@@ -3,7 +3,6 @@ import { generateEventId } from './formatting';
 import type { GameEvent } from '../types/game';
 
 const RUN_FAIL_HEALTH_LOSS = 20;
-const FIGHT_FAIL_HEALTH_LOSS = 50;
 
 export interface EncounterResult {
   success: boolean;
@@ -31,8 +30,8 @@ export function resolveRun(state: GameState, success: boolean): EncounterResult 
       healthLost: RUN_FAIL_HEALTH_LOSS,
       lostInventory: true,
       terminated: newHealth <= 0,
-      message: `They caught you. You lost all your inventory and took ${RUN_FAIL_HEALTH_LOSS} health damage.`,
-      event: { id: generateEventId(), type: 'ftc', message: `Caught while fleeing. Lost all inventory. -${RUN_FAIL_HEALTH_LOSS} health.`, day: state.current_day },
+      message: `They caught you. You lost some of your inventory and took ${RUN_FAIL_HEALTH_LOSS} health damage.`,
+      event: { id: generateEventId(), type: 'ftc', message: `Caught while fleeing. Lost some inventory. -${RUN_FAIL_HEALTH_LOSS} health.`, day: state.current_day },
     };
   }
 }
@@ -48,16 +47,17 @@ export function resolveFight(state: GameState, success: boolean): EncounterResul
       event: { id: generateEventId(), type: 'ftc', message: 'Stood your ground and won. Assets retained.', day: state.current_day },
     };
   } else {
-    const newHealth = state.health - FIGHT_FAIL_HEALTH_LOSS;
+    const healthLost = 40 + Math.floor(Math.random() * 11);
+    const newHealth = state.health - healthLost;
     return {
       success: false,
-      healthLost: FIGHT_FAIL_HEALTH_LOSS,
+      healthLost,
       lostInventory: false,
       terminated: newHealth <= 0,
       message: newHealth <= 0
         ? 'They took everything. Simulation terminated.'
-        : `You lost the fight. -${FIGHT_FAIL_HEALTH_LOSS} health. You kept your assets but at a cost.`,
-      event: { id: generateEventId(), type: 'ftc', message: `Lost the fight. -${FIGHT_FAIL_HEALTH_LOSS} health.`, day: state.current_day },
+        : `You lost the fight. -${healthLost} health. You kept your assets but at a cost.`,
+      event: { id: generateEventId(), type: 'ftc', message: `Lost the fight. -${healthLost} health.`, day: state.current_day },
     };
   }
 }

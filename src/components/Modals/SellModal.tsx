@@ -17,9 +17,25 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
   const asset = ASSET_MAP[assetId];
   const price = marketEntry.price;
   const maxQty = inventoryItem.quantity;
-  const [quantity, setQuantity] = useState(maxQty);
+  const [inputStr, setInputStr] = useState(String(maxQty));
+  const quantity = parseInt(inputStr) || 0;
   const totalRevenue = price * quantity;
   const isValid = quantity > 0 && quantity <= maxQty;
+
+  function handleDecrement() {
+    setInputStr(String(Math.max(1, quantity - 1)));
+  }
+
+  function handleIncrement() {
+    setInputStr(String(Math.min(maxQty, quantity + 1)));
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    if (val === '') { setInputStr(''); return; }
+    const parsed = parseInt(val);
+    if (!isNaN(parsed)) setInputStr(String(Math.min(maxQty, Math.max(1, parsed))));
+  }
 
   function handleSell() {
     if (!isValid) return;
@@ -64,23 +80,23 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              onClick={handleDecrement}
               className="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold transition-colors"
             >-</button>
             <input
               type="number"
               min={1}
               max={maxQty}
-              value={quantity}
-              onChange={e => setQuantity(Math.min(maxQty, Math.max(1, parseInt(e.target.value) || 1)))}
+              value={inputStr}
+              onChange={handleInputChange}
               className="flex-1 text-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
-              onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
+              onClick={handleIncrement}
               className="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold transition-colors"
             >+</button>
             <button
-              onClick={() => setQuantity(maxQty)}
+              onClick={() => setInputStr(String(maxQty))}
               className="px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors"
             >MAX</button>
           </div>
@@ -97,7 +113,7 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
             disabled={!isValid}
             className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors"
           >
-            Sell {quantity} unit{quantity !== 1 ? 's' : ''}
+            Sell {quantity || 0} unit{quantity !== 1 ? 's' : ''}
           </button>
         </div>
       </div>

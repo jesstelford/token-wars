@@ -23,14 +23,20 @@ export function FinanceModal({ cash, bankSavings, debt, initialTab = 'debt', onC
   const numericValue = parseFloat(inputValue.replace(/,/g, '')) || 0;
 
   const activeTab = isDebtMode ? 'debt' : bankTab;
-  const maxForTab = activeTab === 'debt' ? Math.min(cash, debt) : activeTab === 'deposit' ? cash : bankSavings;
+  const rawMax = activeTab === 'debt' ? Math.min(cash, debt) : activeTab === 'deposit' ? cash : bankSavings;
+  const maxForTab = activeTab === 'debt' ? Math.floor(rawMax) : rawMax;
   const isValid = numericValue > 0 && numericValue <= maxForTab;
 
   function handleAction() {
     if (numericValue <= 0) return;
-    if (activeTab === 'debt') onPayDebt(numericValue);
-    else if (activeTab === 'deposit') onDeposit(numericValue);
-    else onWithdraw(numericValue);
+    if (activeTab === 'debt') {
+      onPayDebt(numericValue);
+      onClose();
+    } else if (activeTab === 'deposit') {
+      onDeposit(numericValue);
+    } else {
+      onWithdraw(numericValue);
+    }
     setInputValue('');
   }
 

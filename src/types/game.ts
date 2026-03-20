@@ -38,6 +38,12 @@ export interface EncounterState {
   message: string;
 }
 
+export interface PendingTheft {
+  type: 'robbery' | 'bank_hack';
+  amountLost: number;
+  newTotal: number;
+}
+
 export interface GameState {
   current_cash: number;
   bank_savings: number;
@@ -52,6 +58,7 @@ export interface GameState {
   event_log: GameEvent[];
   game_phase: GamePhase;
   encounter_state: EncounterState | null;
+  pending_thefts: PendingTheft[];
 }
 
 export interface HighScoreEntry {
