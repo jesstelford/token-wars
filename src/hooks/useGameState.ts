@@ -130,10 +130,10 @@ export function useGameState() {
     });
   }, [setState]);
 
-  const resolveEncounterFight = useCallback((success: boolean) => {
+  const resolveEncounterFight = useCallback((success: boolean, healthLost?: number) => {
     setState(prev => {
       if (prev.game_phase !== 'encounter') return prev;
-      const result = resolveFight(prev, success);
+      const result = resolveFight(prev, success, healthLost);
       const newHealth = Math.max(0, prev.health - result.healthLost);
       const newLog = [result.event, ...prev.event_log].slice(0, 20);
       return {

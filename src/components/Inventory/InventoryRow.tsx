@@ -20,9 +20,10 @@ export function InventoryRow({ item, currentPrice, isAvailable, isExternalHover,
 
   const roundedAvg = Math.round(item.avgPurchasePrice);
   const roundedPrice = currentPrice != null ? Math.round(currentPrice) : null;
-  const isAtParity = isAvailable && currentPrice != null && item.avgPurchasePrice > 0 && roundedAvg === roundedPrice;
+  const isFreeToken = item.avgPurchasePrice === 0;
+  const isAtParity = isAvailable && currentPrice != null && !isFreeToken && roundedAvg === roundedPrice;
 
-  const diff = isAvailable && currentPrice != null && item.avgPurchasePrice > 0 && !isAtParity
+  const diff = isAvailable && currentPrice != null && !isAtParity
     ? currentPrice - item.avgPurchasePrice
     : 0;
 
@@ -61,7 +62,7 @@ export function InventoryRow({ item, currentPrice, isAvailable, isExternalHover,
       </td>
       <td className="px-3 py-1.5 text-right">
         <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
-          {item.avgPurchasePrice > 0 ? formatCurrencyFull(item.avgPurchasePrice) : '—'}
+          {formatCurrencyFull(item.avgPurchasePrice)}
         </span>
       </td>
       <td className="px-2 py-1.5 text-right w-16">

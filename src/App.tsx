@@ -181,7 +181,7 @@ export default function App() {
           <EncounterModal
             encounter={state.encounter_state}
             onRun={(success) => resolveEncounterRun(success)}
-            onFight={(success) => resolveEncounterFight(success)}
+            onFight={(success, healthLost) => resolveEncounterFight(success, healthLost)}
           />
         )}
 

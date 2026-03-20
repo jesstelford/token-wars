@@ -36,7 +36,7 @@ export function resolveRun(state: GameState, success: boolean): EncounterResult 
   }
 }
 
-export function resolveFight(state: GameState, success: boolean): EncounterResult {
+export function resolveFight(state: GameState, success: boolean, preRolledHealthLost?: number): EncounterResult {
   if (success) {
     return {
       success: true,
@@ -47,7 +47,7 @@ export function resolveFight(state: GameState, success: boolean): EncounterResul
       event: { id: generateEventId(), type: 'ftc', message: 'Stood your ground and won. Assets retained.', day: state.current_day },
     };
   } else {
-    const healthLost = 40 + Math.floor(Math.random() * 11);
+    const healthLost = preRolledHealthLost ?? (40 + Math.floor(Math.random() * 11));
     const newHealth = state.health - healthLost;
     return {
       success: false,

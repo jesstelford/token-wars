@@ -34,8 +34,10 @@ export function FinanceModal({ cash, bankSavings, debt, initialTab = 'debt', onC
       onClose();
     } else if (activeTab === 'deposit') {
       onDeposit(numericValue);
+      onClose();
     } else {
       onWithdraw(numericValue);
+      onClose();
     }
     setInputValue('');
   }

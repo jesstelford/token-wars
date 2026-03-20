@@ -5,7 +5,7 @@ import type { EncounterState } from '../../types/game';
 interface EncounterModalProps {
   encounter: EncounterState;
   onRun: (success: boolean) => void;
-  onFight: (success: boolean) => void;
+  onFight: (success: boolean, healthLost: number) => void;
 }
 
 type Decision = 'run' | 'fight' | null;
@@ -13,6 +13,7 @@ type Decision = 'run' | 'fight' | null;
 interface Result {
   success: boolean;
   message: string;
+  healthLost?: number;
 }
 
 const RUN_SUCCESS_RATE = 0.60;
@@ -37,13 +38,15 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
 
   function handleFight() {
     const success = Math.random() < FIGHT_SUCCESS_RATE;
+    const healthLost = success ? 0 : 40 + Math.floor(Math.random() * 11);
     setDecision('fight');
     setResolvedSuccess(success);
     setResult({
       success,
+      healthLost,
       message: success
         ? 'You outmaneuvered them legally. Assets retained, no damage taken.'
-        : 'You lost the fight. You took between 40 and 50 health damage.',
+        : `You lost the fight. You took ${healthLost} health damage.`,
     });
   }
 
@@ -51,7 +54,7 @@ export function EncounterModal({ encounter, onRun, onFight }: EncounterModalProp
     if (decision === 'run') {
       onRun(resolvedSuccess);
     } else if (decision === 'fight') {
-      onFight(resolvedSuccess);
+      onFight(resolvedSuccess, result?.healthLost ?? 0);
     }
   }
 
