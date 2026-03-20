@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import type { GameState, HighScoreEntry, PendingTheft } from '../types/game';
+import type { GameState, HighScoreEntry, PendingTheft, PendingFreeToken } from '../types/game';
 import { INITIAL_DEBT, INITIAL_CAPACITY, MAX_DAYS } from '../constants/assets';
 import { ASSET_MAP } from '../constants/assets';
 import type { AssetId } from '../constants/assets';
@@ -34,6 +34,7 @@ function buildInitialState(): GameState {
     game_phase: 'playing',
     encounter_state: null,
     pending_thefts: [],
+    pending_free_tokens: [],
   };
 }
 
@@ -55,7 +56,7 @@ export function useGameState() {
       if (prev.current_day >= MAX_DAYS) {
         return { ...prev, game_phase: 'gameover' };
       }
-      const { updatedState, robbedAmount, bankHackedAmount } = runMarketLoop(prev, targetCommunity);
+      const { updatedState, robbedAmount, bankHackedAmount, freeTokenEvent } = runMarketLoop(prev, targetCommunity);
       const nextDay = (updatedState.current_day ?? prev.current_day);
 
       const pendingThefts: PendingTheft[] = [];
@@ -68,12 +69,20 @@ export function useGameState() {
         pendingThefts.push({ type: 'bank_hack', amountLost: bankHackedAmount, newTotal: savingsAfter });
       }
 
-      const merged = { ...prev, ...updatedState, pending_thefts: pendingThefts };
+      const pendingFreeTokens: PendingFreeToken[] = freeTokenEvent ? [freeTokenEvent] : [];
+      const merged = { ...prev, ...updatedState, pending_thefts: pendingThefts, pending_free_tokens: pendingFreeTokens };
       if (nextDay > MAX_DAYS) {
         return { ...merged, game_phase: 'gameover' };
       }
       return merged;
     });
+  }, [setState]);
+
+  const dismissFreeToken = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      pending_free_tokens: prev.pending_free_tokens?.slice(1) ?? [],
+    }));
   }, [setState]);
 
   const dismissTheft = useCallback(() => {
@@ -278,6 +287,7 @@ export function useGameState() {
     hasSave,
     startNewGame,
     travel,
+    dismissFreeToken,
     dismissTheft,
     finishGame,
     resolveEncounterRun,

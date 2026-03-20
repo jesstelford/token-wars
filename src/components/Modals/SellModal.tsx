@@ -34,7 +34,12 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
     const val = e.target.value;
     if (val === '') { setInputStr(''); return; }
     const parsed = parseInt(val);
-    if (!isNaN(parsed)) setInputStr(String(Math.min(maxQty, Math.max(1, parsed))));
+    if (isNaN(parsed)) return;
+    if (parsed > maxQty) {
+      setInputStr(inputStr === '' ? String(maxQty) : inputStr);
+      return;
+    }
+    setInputStr(String(Math.max(1, parsed)));
   }
 
   function handleSell() {

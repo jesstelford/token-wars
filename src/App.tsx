@@ -15,6 +15,7 @@ import { FinanceModal } from './components/Finance/FinanceModal';
 import { BuyModal } from './components/Modals/BuyModal';
 import { SellModal } from './components/Modals/SellModal';
 import { TheftModal } from './components/Modals/TheftModal';
+import { FreeTokenModal } from './components/Modals/FreeTokenModal';
 import { TitleScreen } from './components/Screens/TitleScreen';
 import { GameOverScreen } from './components/Screens/GameOverScreen';
 
@@ -36,6 +37,7 @@ export default function App() {
     hasSave,
     startNewGame,
     travel,
+    dismissFreeToken,
     dismissTheft,
     finishGame,
     resolveEncounterRun,
@@ -109,6 +111,7 @@ export default function App() {
   const buyMarketEntry = state.market_prices[buyAssetId];
 
   const pendingTheft = state.pending_thefts?.[0] ?? null;
+  const pendingFreeToken = state.pending_free_tokens?.[0] ?? null;
 
   if (screenPhase === 'title' && !isGameOver) {
     return (
@@ -191,7 +194,16 @@ export default function App() {
           />
         )}
 
-        {activeModal === 'buy' && buyMarketEntry && !pendingTheft && (
+        {pendingFreeToken && !pendingTheft && (
+          <FreeTokenModal
+            assetId={pendingFreeToken.assetId}
+            quantity={pendingFreeToken.quantity}
+            communityName={pendingFreeToken.communityName}
+            onClose={dismissFreeToken}
+          />
+        )}
+
+        {activeModal === 'buy' && buyMarketEntry && !pendingTheft && !pendingFreeToken && (
           <BuyModal
             assetId={buyAssetId}
             marketEntry={buyMarketEntry}
@@ -203,7 +215,7 @@ export default function App() {
           />
         )}
 
-        {activeModal === 'sell' && selectedAssetId && !pendingTheft && (() => {
+        {activeModal === 'sell' && selectedAssetId && !pendingTheft && !pendingFreeToken && (() => {
           const invItem = state.inventory.find(i => i.assetId === selectedAssetId);
           const mp = state.market_prices[selectedAssetId];
           if (!invItem || !mp) return null;
@@ -218,7 +230,7 @@ export default function App() {
           );
         })()}
 
-        {activeModal === 'finance' && !pendingTheft && (
+        {activeModal === 'finance' && !pendingTheft && !pendingFreeToken && (
           <FinanceModal
             cash={state.current_cash}
             bankSavings={state.bank_savings}

@@ -59,6 +59,7 @@ export interface GameState {
   game_phase: GamePhase;
   encounter_state: EncounterState | null;
   pending_thefts: PendingTheft[];
+  pending_free_tokens: PendingFreeToken[];
 }
 
 export interface HighScoreEntry {
@@ -69,3 +70,9 @@ export interface HighScoreEntry {
 }
 
 export type ModalType = 'buy' | 'sell' | 'finance' | 'encounter' | 'highscores' | null;
+
+export interface PendingFreeToken {
+  assetId: AssetId;
+  quantity: number;
+  communityName: string;
+}

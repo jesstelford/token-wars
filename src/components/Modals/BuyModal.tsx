@@ -42,7 +42,12 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
     const val = e.target.value;
     if (val === '') { setInputStr(''); return; }
     const parsed = parseInt(val);
-    if (!isNaN(parsed)) setInputStr(String(Math.min(maxQty, Math.max(1, parsed))));
+    if (isNaN(parsed)) return;
+    if (parsed > maxQty) {
+      setInputStr(inputStr === '' ? '1' : inputStr);
+      return;
+    }
+    setInputStr(String(Math.max(1, parsed)));
   }
 
   function handleBuy() {
