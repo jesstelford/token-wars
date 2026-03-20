@@ -54,8 +54,8 @@ export function FinanceModal({ cash, bankSavings, debt, initialTab = 'debt', onC
         <div className="flex items-center justify-between px-5 py-4" style={{ background: 'var(--modal-header-bg)', borderBottom: '1px solid var(--color-border)' }}>
           <div className="flex items-center gap-2">
             {isDebtMode
-              ? <CreditCard className="w-5 h-5 text-red-500" />
-              : <Landmark className="w-5 h-5 text-sky-600" />
+              ? <CreditCard className="w-5 h-5" style={{ color: 'var(--color-danger)' }} />
+              : <Landmark className="w-5 h-5" style={{ color: 'var(--color-bank)' }} />
             }
             <h2 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>
               {isDebtMode ? 'Pay Debt' : 'Bank'}
@@ -102,7 +102,7 @@ export function FinanceModal({ cash, bankSavings, debt, initialTab = 'debt', onC
             {!isDebtMode && (
               <div className="flex justify-between text-sm">
                 <span style={{ color: 'var(--color-text-muted)' }}>Bank savings <span className="text-xs" style={{ color: 'var(--color-success)' }}>(+3%/turn)</span></span>
-                <span className="font-semibold text-sky-600" style={{ fontFamily: 'var(--font-mono)' }}>{formatCurrencyFull(bankSavings)}</span>
+                <span className="font-semibold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-bank)' }}>{formatCurrencyFull(bankSavings)}</span>
               </div>
             )}
             {isDebtMode && (
@@ -126,7 +126,7 @@ export function FinanceModal({ cash, bankSavings, debt, initialTab = 'debt', onC
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               placeholder="Enter amount"
-              className="flex-1 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="flex-1 px-3 py-2 text-sm focus:outline-none"
               style={{ background: 'var(--color-bg-input)', border: '1px solid var(--color-border-focus)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-sm)' }}
             />
             <button

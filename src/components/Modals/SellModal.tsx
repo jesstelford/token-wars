@@ -57,7 +57,7 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
       <div className="shadow-2xl max-w-sm w-full mx-4 overflow-hidden" style={{ background: 'var(--modal-bg)', border: 'var(--modal-border-style) var(--modal-border)', borderRadius: 'var(--modal-radius)' }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ background: 'var(--modal-header-bg)', borderBottom: '1px solid var(--color-border)' }}>
           <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-emerald-600" />
+            <Tag className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
             <h2 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Sell {asset?.name}</h2>
           </div>
           <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }} className="transition-colors hover:opacity-80">
@@ -108,7 +108,7 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
               max={maxQty}
               value={inputStr}
               onChange={handleInputChange}
-              className="flex-1 text-center px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 text-center px-3 py-2 text-sm font-bold focus:outline-none"
               style={{ background: 'var(--color-bg-input)', border: '1px solid var(--color-border-focus)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)' }}
             />
             <button
@@ -134,8 +134,8 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
               <div className="flex justify-between items-center">
                 <span className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-muted)' }}>
                   {profitLoss >= 0
-                    ? <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                    : <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+                    ? <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--color-success)' }} />
+                    : <TrendingDown className="w-3.5 h-3.5" style={{ color: 'var(--color-danger)' }} />
                   }
                   {profitLoss >= 0 ? 'Profit' : 'Loss'}
                 </span>

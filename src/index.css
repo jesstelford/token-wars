@@ -1690,6 +1690,19 @@ h1, h2, h3, h4, h5, h6 {
   animation: vaporwave-shimmer 5s ease infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="terminal-dark"] .theme-text-heading,
+  [data-theme="neon-dark"] .theme-text-heading,
+  [data-theme="crypto-dark"] .theme-text-heading,
+  [data-theme="vaporwave-dark"] h1,
+  [data-theme="vaporwave-light"] h1 {
+    animation: none;
+  }
+  body {
+    transition: none;
+  }
+}
+
 /* ============================================================
    SCROLLBAR THEMING
    ============================================================ */
