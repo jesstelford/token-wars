@@ -8,10 +8,12 @@ interface InventoryViewProps {
   hoveredAssetId: AssetId | null;
   onHoverAsset: (assetId: AssetId | null) => void;
   onSell: (assetId: AssetId) => void;
+  effectiveCapacity?: number;
 }
 
-export function InventoryView({ state, hoveredAssetId, onHoverAsset, onSell }: InventoryViewProps) {
+export function InventoryView({ state, hoveredAssetId, onHoverAsset, onSell, effectiveCapacity }: InventoryViewProps) {
   const usedCapacity = state.inventory.reduce((sum, i) => sum + i.quantity, 0);
+  const totalCapacity = effectiveCapacity ?? state.capacity;
   const availableSet = new Set(state.available_assets ?? []);
 
   return (
@@ -19,7 +21,7 @@ export function InventoryView({ state, hoveredAssetId, onHoverAsset, onSell }: I
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex-none">
         <Package className="w-4 h-4 text-slate-500 dark:text-slate-400" />
         <h2 className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Inventory</h2>
-        <span className="ml-auto text-xs font-mono text-slate-500 dark:text-slate-400">{usedCapacity}/{state.capacity}</span>
+        <span className="ml-auto text-xs font-mono text-slate-500 dark:text-slate-400">{usedCapacity}/{totalCapacity}</span>
       </div>
 
       <div className="sm:flex-1 sm:overflow-y-auto">

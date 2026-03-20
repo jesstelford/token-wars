@@ -1,4 +1,4 @@
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
 import type { GearItemId } from '../../constants/items';
 import type { PendingItemDrop } from '../../types/game';
@@ -19,6 +19,10 @@ const SOURCE_LABELS: Record<PendingItemDrop['source'], string> = {
   milestone: 'Milestone reward',
 };
 
+function isPositiveEffect(summary: string): boolean {
+  return summary.startsWith('+');
+}
+
 export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropModalProps) {
   const item = GEAR_MAP[drop.itemId];
   if (!item) return null;
@@ -30,17 +34,12 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
   const scrapValue = getScrapValue(drop.itemId);
 
   const rarityLabel = item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1);
+  const isPositive = isPositiveEffect(item.effectSummary);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in">
-        <div className="relative px-5 pt-6 pb-4">
-          <div className="absolute top-4 right-4">
-            <span className={`text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${colors.badge}`}>
-              {rarityLabel}
-            </span>
-          </div>
-
+        <div className="px-5 pt-6 pb-4">
           <div className="flex items-start gap-4">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 ${colors.border} ${colors.bg} shrink-0`}>
               <GearIcon name={item.icon} className={`w-7 h-7 ${colors.text}`} />
@@ -56,10 +55,19 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
             </div>
           </div>
 
-          <p className="text-slate-400 text-sm mt-3 leading-relaxed">{item.description}</p>
+          <p className="text-slate-400 text-sm mt-3 leading-relaxed">
+            {item.description}{' '}
+            <span className={`text-xs font-medium ${colors.text} opacity-70`}>{rarityLabel}</span>
+          </p>
 
-          <div className={`mt-3 px-3 py-2 rounded-lg border ${colors.border} ${colors.bg}`}>
-            <p className={`text-sm font-semibold ${colors.text}`}>{item.effectSummary}</p>
+          <div className="mt-3 flex items-center gap-1.5">
+            {isPositive
+              ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              : <TrendingDown className="w-3.5 h-3.5 text-red-400 shrink-0" />
+            }
+            <span className={`text-sm font-semibold ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+              {item.effectSummary}
+            </span>
           </div>
 
           {isDuplicate && (
@@ -79,7 +87,7 @@ export function ItemDropModal({ drop, state, onCollect, onDismiss }: ItemDropMod
           )}
         </div>
 
-        <div className="px-5 pb-5 flex gap-2">
+        <div className="px-5 pb-5 pt-2 flex gap-2">
           {isDuplicate ? (
             <button
               onClick={() => onCollect(drop.itemId)}

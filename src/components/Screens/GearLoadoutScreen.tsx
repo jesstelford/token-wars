@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, ChevronRight, SkipForward, Lock } from 'lucide-react';
+import { Shield, ChevronRight, SkipForward, Lock, Check } from 'lucide-react';
 import { GEAR_ITEMS, GEAR_MAP, RARITY_COLORS, MAX_GEAR_SLOTS } from '../../constants/items';
 import type { GearItemId } from '../../constants/items';
 import { getStartingDebtCost } from '../../utils/gearEffects';
@@ -95,8 +95,8 @@ export function GearLoadoutScreen({ unlockedGearIds, onStart, onSkip }: GearLoad
                           </p>
                         </div>
                         {isSelected && (
-                          <div className={`absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center ${colors.badge}`}>
-                            <span className="text-xs font-bold">{selected.indexOf(item.id) + 1}</span>
+                          <div className={`absolute bottom-2 right-2 w-4 h-4 rounded-full flex items-center justify-center ${colors.badge}`}>
+                            <Check className="w-2.5 h-2.5" strokeWidth={3} />
                           </div>
                         )}
                       </button>

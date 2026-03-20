@@ -5,8 +5,10 @@ import { calculateScore, getScoreTier } from '../../utils/scoring';
 import { formatCurrencyFull } from '../../utils/formatting';
 import { Confetti } from './Confetti';
 import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
+import type { GearItemId } from '../../constants/items';
 import { getAllGear } from '../../utils/gearEffects';
 import { GearIcon } from '../Gear/GearIcon';
+import { GearTooltip } from '../Gear/GearTooltip';
 
 interface GameOverScreenProps {
   state: GameState;
@@ -17,6 +19,7 @@ interface GameOverScreenProps {
 export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScreenProps) {
   const [name, setName] = useState('');
   const [editing, setEditing] = useState(false);
+  const [gearTooltip, setGearTooltip] = useState<{ id: GearItemId; rect: DOMRect } | null>(null);
   const submitted = useRef(false);
 
   const score = calculateScore(state);
@@ -109,7 +112,12 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
                 const colors = RARITY_COLORS[item.rarity];
                 const isEquipped = state.equipped_gear?.includes(id);
                 return (
-                  <div key={id} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${colors.border} ${colors.bg}`}>
+                  <div
+                    key={id}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${colors.border} ${colors.bg} cursor-default`}
+                    onMouseEnter={e => setGearTooltip({ id, rect: e.currentTarget.getBoundingClientRect() })}
+                    onMouseLeave={() => setGearTooltip(null)}
+                  >
                     <GearIcon name={item.icon} className={`w-3 h-3 ${colors.text}`} />
                     <span className={`text-xs font-semibold ${colors.text}`}>{item.name}</span>
                     {isEquipped && <span className="text-xs text-slate-500 italic">start</span>}
@@ -117,6 +125,12 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
                 );
               })}
             </div>
+            {gearTooltip && (() => {
+              const item = GEAR_MAP[gearTooltip.id];
+              if (!item) return null;
+              const isEquipped = state.equipped_gear?.includes(gearTooltip.id) ?? false;
+              return <GearTooltip item={item} isEquipped={isEquipped} anchorRect={gearTooltip.rect} />;
+            })()}
           </div>
         )}
 

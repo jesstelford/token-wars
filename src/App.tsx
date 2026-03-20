@@ -187,7 +187,14 @@ export default function App() {
           state={state}
           onSubmitScore={(name, updateLatest) => submitScore(name, updateLatest)}
           onNewGame={() => {
-            handleNewGame();
+            clearSave();
+            if (unlockedGear.length > 0) {
+              setScreenPhase('loadout');
+            } else {
+              startNewGame([], 0);
+              setScreenPhase('game');
+              setActiveModal(null);
+            }
           }}
         />
       </div>
@@ -228,7 +235,7 @@ export default function App() {
 
           <div className="flex flex-col sm:flex-1 sm:grid sm:grid-cols-2 gap-px sm:gap-2 sm:min-h-0">
             <MarketView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onBuy={handleBuyClick} />
-            <InventoryView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onSell={handleSellClick} />
+            <InventoryView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onSell={handleSellClick} effectiveCapacity={effectiveCapacity} />
           </div>
         </div>
 
