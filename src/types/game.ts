@@ -4,6 +4,8 @@ import type { GearItemId } from '../constants/items';
 
 export type GamePhase = 'title' | 'playing' | 'encounter' | 'gameover';
 
+export type TutorialStep = 'buy' | 'travel' | 'sell' | 'pay_debt' | 'complete';
+
 export type EventType =
   | 'surge'
   | 'crash'

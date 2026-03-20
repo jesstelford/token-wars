@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useGameState } from './hooks/useGameState';
-import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardNav } from './hooks/useKeyboardNav';
 import { useGamepadInput } from './hooks/useGamepadInput';
 import { useTheme } from './context/ThemeContext';
+import {
+  useTutorial,
+  buildTutorialSellState,
+  TUTORIAL_ASSET_ID,
+  TUTORIAL_DEST_COMMUNITY,
+  TUTORIAL_QUANTITY,
+  TUTORIAL_BUY_PRICE,
+  TUTORIAL_SELL_PRICE,
+} from './hooks/useTutorial';
 
 import { Header } from './components/Header/Header';
 import { StatsPanel } from './components/Stats/StatsPanel';
@@ -23,6 +31,7 @@ import { TitleScreen } from './components/Screens/TitleScreen';
 import { GameOverScreen } from './components/Screens/GameOverScreen';
 import { GearLoadoutScreen } from './components/Screens/GearLoadoutScreen';
 import { GearPanel } from './components/Gear/GearPanel';
+import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 
 import type { AssetId } from './constants/assets';
 import type { CommunityId } from './constants/communities';
@@ -64,8 +73,21 @@ export default function App() {
     clearSave,
   } = useGameState();
 
-  useKeyboardNav(screenPhase === 'game');
-  useGamepadInput(screenPhase === 'game');
+  const {
+    tutorialStep,
+    tutorialState,
+    setTutorialState,
+    startTutorial,
+    advanceTutorial,
+    completeTutorial,
+    skipTutorial,
+  } = useTutorial();
+
+  const isTutorialActive = tutorialStep !== null;
+  const displayState = isTutorialActive && tutorialState ? tutorialState : state;
+
+  useKeyboardNav(screenPhase === 'game' && !isTutorialActive);
+  useGamepadInput(screenPhase === 'game' && !isTutorialActive);
 
   useEffect(() => {
     const playerId = getPlayerId();
@@ -81,6 +103,12 @@ export default function App() {
       setScreenPhase('game');
       setActiveModal(null);
     }
+  }
+
+  function handleTutorial() {
+    startTutorial();
+    setScreenPhase('game');
+    setActiveModal(null);
   }
 
   function handleLoadoutStart(selectedGear: GearItemId[], extraDebt: number) {
@@ -99,16 +127,6 @@ export default function App() {
     setScreenPhase('game');
   }
 
-  function handleBuyClick(assetId: AssetId) {
-    setSelectedAssetId(assetId);
-    setActiveModal('buy');
-  }
-
-  function handleSellClick(assetId: AssetId) {
-    setSelectedAssetId(assetId);
-    setActiveModal('sell');
-  }
-
   function handleOpenBank() {
     setFinanceTab('deposit');
     setActiveModal('finance');
@@ -121,27 +139,94 @@ export default function App() {
 
   function handleTravel(communityId: CommunityId) {
     setActiveModal(null);
+    if (isTutorialActive && tutorialState) {
+      if (tutorialStep === 'travel' && communityId === TUTORIAL_DEST_COMMUNITY) {
+        const newState = buildTutorialSellState(tutorialState);
+        advanceTutorial('sell', newState);
+      }
+      return;
+    }
     travel(communityId);
   }
 
-  const allGear = getAllGear(state);
+  function handleTutorialBuy(assetId: AssetId, quantity: number) {
+    if (!tutorialState) return;
+    const price = tutorialState.market_prices[assetId]?.price ?? TUTORIAL_BUY_PRICE;
+    const totalCost = price * quantity;
+    const newInventory = [{ assetId, quantity, avgPurchasePrice: price }];
+    const updated = {
+      ...tutorialState,
+      current_cash: tutorialState.current_cash - totalCost,
+      inventory: newInventory,
+    };
+    advanceTutorial('travel', updated);
+    setActiveModal(null);
+  }
+
+  function handleTutorialSell(_assetId: AssetId, quantity: number) {
+    if (!tutorialState) return;
+    const price = TUTORIAL_SELL_PRICE;
+    const totalRevenue = price * quantity;
+    const updated = {
+      ...tutorialState,
+      current_cash: tutorialState.current_cash + totalRevenue,
+      inventory: [],
+    };
+    advanceTutorial('pay_debt', updated);
+    setActiveModal(null);
+  }
+
+  function handleTutorialPayDebt(amount: number) {
+    if (!tutorialState) return;
+    const payment = Math.min(amount, tutorialState.current_debt, tutorialState.current_cash);
+    if (payment <= 0) return;
+    const updated = {
+      ...tutorialState,
+      current_cash: tutorialState.current_cash - payment,
+      current_debt: Math.max(0, tutorialState.current_debt - payment),
+    };
+    setTutorialState(updated);
+    advanceTutorial('complete', updated);
+    setActiveModal(null);
+  }
+
+  function handleTutorialStartGame() {
+    completeTutorial();
+    clearSave();
+    startNewGame([], 0);
+    setScreenPhase('game');
+    setActiveModal(null);
+  }
+
+  function handleTutorialSkip() {
+    skipTutorial();
+    setScreenPhase('title');
+    setActiveModal(null);
+  }
+
+  const allGear = getAllGear(displayState);
   const gearEffects = computeGearEffects(allGear);
-  const effectiveCapacity = state.capacity + gearEffects.capacityBonus;
-  const usedCapacity = state.inventory.reduce((sum, i) => sum + i.quantity, 0);
-  const isGameOver = state.game_phase === 'gameover';
+  const effectiveCapacity = displayState.capacity + gearEffects.capacityBonus;
+  const usedCapacity = displayState.inventory.reduce((sum, i) => sum + i.quantity, 0);
+  const isGameOver = state.game_phase === 'gameover' && !isTutorialActive;
 
-  const firstAssetId = Object.keys(state.market_prices)[0] as AssetId | undefined;
+  const firstAssetId = Object.keys(displayState.market_prices)[0] as AssetId | undefined;
   const buyAssetId: AssetId = selectedAssetId ?? firstAssetId ?? 'grok';
-  const buyMarketEntry = state.market_prices[buyAssetId];
+  const buyMarketEntry = displayState.market_prices[buyAssetId];
 
-  const pendingTheft = state.pending_thefts?.[0] ?? null;
-  const pendingFreeToken = state.pending_free_tokens?.[0] ?? null;
-  const pendingItemDrop = state.pending_item_drop ?? null;
-  const pendingVendor = state.pending_vendor ?? null;
+  const pendingTheft = !isTutorialActive ? (state.pending_thefts?.[0] ?? null) : null;
+  const pendingFreeToken = !isTutorialActive ? (state.pending_free_tokens?.[0] ?? null) : null;
+  const pendingItemDrop = !isTutorialActive ? (state.pending_item_drop ?? null) : null;
+  const pendingVendor = !isTutorialActive ? (state.pending_vendor ?? null) : null;
 
   const hasBlockingModal = pendingTheft || pendingFreeToken || pendingItemDrop || pendingVendor;
 
   const hasScanlines = ['retro', 'terminal', 'crypto', 'neon'].includes(themeId);
+
+  const tutorialProfit = tutorialState
+    ? TUTORIAL_QUANTITY * (TUTORIAL_SELL_PRICE - TUTORIAL_BUY_PRICE)
+    : 0;
+  const tutorialStartingDebt = 5500;
 
   if (screenPhase === 'loadout') {
     return (
@@ -160,6 +245,7 @@ export default function App() {
         hasSave={hasSave()}
         onNewGame={handleNewGame}
         onContinue={handleContinue}
+        onTutorial={handleTutorial}
       />
     );
   }
@@ -183,6 +269,11 @@ export default function App() {
     );
   }
 
+  const travelHighlight = isTutorialActive && tutorialStep === 'travel';
+  const marketHighlight = isTutorialActive && tutorialStep === 'buy';
+  const inventoryHighlight = isTutorialActive && tutorialStep === 'sell';
+  const debtHighlight = isTutorialActive && tutorialStep === 'pay_debt';
+
   return (
     <div
       className={hasScanlines ? 'theme-scanlines' : ''}
@@ -195,37 +286,67 @@ export default function App() {
       >
         <div className="flex-1 flex flex-col gap-px sm:gap-2 sm:p-2 sm:min-h-0 overflow-y-auto sm:overflow-hidden">
           <div className="flex flex-col sm:flex-row gap-px sm:gap-2 flex-none">
-            <div className="flex-1">
+            <div className={`flex-1${debtHighlight ? ' tutorial-highlight-ring' : ''}`}>
               <StatsPanel
-                state={state}
+                state={displayState}
                 onOpenBank={handleOpenBank}
-                onOpenDebt={handleOpenDebt}
+                onOpenDebt={() => {
+                  if (isTutorialActive && tutorialStep === 'pay_debt') {
+                    setFinanceTab('debt');
+                    setActiveModal('finance');
+                  } else if (!isTutorialActive) {
+                    handleOpenDebt();
+                  }
+                }}
               />
             </div>
-            <div className="flex-1">
+            <div className={`flex-1${travelHighlight ? ' tutorial-highlight-ring' : ''}`}>
               <TravelPanel
-                currentCommunity={state.current_community}
-                currentDay={state.current_day}
+                currentCommunity={displayState.current_community}
+                currentDay={displayState.current_day}
                 onTravel={handleTravel}
-                onFinish={finishGame}
+                onFinish={isTutorialActive ? () => {} : finishGame}
               />
             </div>
           </div>
 
-          <GearPanel
-            equippedGear={state.equipped_gear ?? []}
-            foundGear={state.found_gear ?? []}
-          />
+          {!isTutorialActive && (
+            <GearPanel
+              equippedGear={displayState.equipped_gear ?? []}
+              foundGear={displayState.found_gear ?? []}
+            />
+          )}
 
           <div className="flex flex-col sm:flex-1 sm:grid sm:grid-cols-2 gap-px sm:gap-2 sm:min-h-0">
-            <MarketView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onBuy={handleBuyClick} />
-            <InventoryView state={state} hoveredAssetId={hoveredAssetId} onHoverAsset={setHoveredAssetId} onSell={handleSellClick} effectiveCapacity={effectiveCapacity} />
+            <div className={marketHighlight ? 'tutorial-highlight-ring' : ''}>
+              <MarketView
+                state={displayState}
+                hoveredAssetId={hoveredAssetId}
+                onHoverAsset={setHoveredAssetId}
+                onBuy={(assetId) => {
+                  setSelectedAssetId(assetId);
+                  setActiveModal('buy');
+                }}
+              />
+            </div>
+            <div className={inventoryHighlight ? 'tutorial-highlight-ring' : ''}>
+              <InventoryView
+                state={displayState}
+                hoveredAssetId={hoveredAssetId}
+                onHoverAsset={setHoveredAssetId}
+                onSell={(assetId) => {
+                  setSelectedAssetId(assetId);
+                  setActiveModal('sell');
+                }}
+                effectiveCapacity={effectiveCapacity}
+              />
+            </div>
           </div>
         </div>
 
-        <EventLog events={state.event_log} />
+        <EventLog events={displayState.event_log} />
 
-        {state.game_phase === 'encounter' && state.encounter_state && !pendingTheft && (
+        {!isTutorialActive && state.game_phase === 'encounter' && state.encounter_state && !pendingTheft && (
           <EncounterModal
             encounter={state.encounter_state}
             inventory={state.inventory}
@@ -275,25 +396,39 @@ export default function App() {
           <BuyModal
             assetId={buyAssetId}
             marketEntry={buyMarketEntry}
-            cash={state.current_cash}
-            bankSavings={state.bank_savings}
+            cash={displayState.current_cash}
+            bankSavings={displayState.bank_savings}
             usedCapacity={usedCapacity}
             totalCapacity={effectiveCapacity}
-            onBuy={(id, qty) => { buyAsset(id, qty); setActiveModal(null); }}
+            onBuy={(id, qty) => {
+              if (isTutorialActive && tutorialStep === 'buy' && id === TUTORIAL_ASSET_ID) {
+                handleTutorialBuy(id, qty);
+              } else if (!isTutorialActive) {
+                buyAsset(id, qty);
+                setActiveModal(null);
+              }
+            }}
             onClose={() => setActiveModal(null)}
           />
         )}
 
         {activeModal === 'sell' && selectedAssetId && !hasBlockingModal && (() => {
-          const invItem = state.inventory.find(i => i.assetId === selectedAssetId);
-          const mp = state.market_prices[selectedAssetId];
+          const invItem = displayState.inventory.find(i => i.assetId === selectedAssetId);
+          const mp = displayState.market_prices[selectedAssetId];
           if (!invItem || !mp) return null;
           return (
             <SellModal
               assetId={selectedAssetId}
               marketEntry={mp}
               inventoryItem={invItem}
-              onSell={(id, qty) => { sellAsset(id, qty); setActiveModal(null); }}
+              onSell={(id, qty) => {
+                if (isTutorialActive && tutorialStep === 'sell' && id === TUTORIAL_ASSET_ID) {
+                  handleTutorialSell(id, qty);
+                } else if (!isTutorialActive) {
+                  sellAsset(id, qty);
+                  setActiveModal(null);
+                }
+              }}
               onClose={() => setActiveModal(null)}
             />
           );
@@ -301,14 +436,32 @@ export default function App() {
 
         {activeModal === 'finance' && !hasBlockingModal && (
           <FinanceModal
-            cash={state.current_cash}
-            bankSavings={state.bank_savings}
-            debt={state.current_debt}
+            cash={displayState.current_cash}
+            bankSavings={displayState.bank_savings}
+            debt={displayState.current_debt}
             initialTab={financeTab}
             onClose={() => setActiveModal(null)}
-            onPayDebt={amount => { payDebt(amount); setActiveModal(null); }}
-            onDeposit={amount => { deposit(amount); }}
-            onWithdraw={amount => { withdraw(amount); }}
+            onPayDebt={amount => {
+              if (isTutorialActive && tutorialStep === 'pay_debt') {
+                handleTutorialPayDebt(amount);
+              } else if (!isTutorialActive) {
+                payDebt(amount);
+                setActiveModal(null);
+              }
+            }}
+            onDeposit={amount => { if (!isTutorialActive) deposit(amount); }}
+            onWithdraw={amount => { if (!isTutorialActive) withdraw(amount); }}
+          />
+        )}
+
+        {isTutorialActive && tutorialStep && (
+          <TutorialOverlay
+            step={tutorialStep}
+            startingDebt={tutorialStartingDebt}
+            currentDebt={tutorialState?.current_debt ?? tutorialStartingDebt}
+            profit={tutorialProfit}
+            onStartGame={handleTutorialStartGame}
+            onSkip={handleTutorialSkip}
           />
         )}
       </div>

@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import { Trophy, Play, RotateCcw, TrendingUp } from 'lucide-react';
+import { Trophy, Play, RotateCcw, TrendingUp, BookOpen } from 'lucide-react';
 import type { HighScoreEntry } from '../../types/game';
 import { HighScoresModal } from './HighScoresModal';
 import { formatCurrencyFull } from '../../utils/formatting';
 import { Header } from '../Header/Header';
+import { hasTutorialBeenSeen } from '../../hooks/useTutorial';
 
 interface TitleScreenProps {
   scores: HighScoreEntry[];
   hasSave: boolean;
   onNewGame: () => void;
   onContinue: () => void;
+  onTutorial: () => void;
 }
 
-export function TitleScreen({ scores, hasSave, onNewGame, onContinue }: TitleScreenProps) {
+export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial }: TitleScreenProps) {
   const [showAllScores, setShowAllScores] = useState(false);
   const top5 = scores.slice(0, 5);
+  const tutorialSeen = hasTutorialBeenSeen();
 
   return (
     <div
@@ -65,6 +68,13 @@ export function TitleScreen({ scores, hasSave, onNewGame, onContinue }: TitleScr
             >
               <RotateCcw className="w-4 h-4" />
               {hasSave ? 'New Game' : 'Start Game'}
+            </button>
+            <button
+              onClick={onTutorial}
+              className={`theme-btn-secondary w-full flex items-center justify-center gap-2 py-3 text-sm${!tutorialSeen ? ' tutorial-pulse-btn' : ''}`}
+            >
+              <BookOpen className="w-4 h-4" />
+              {tutorialSeen ? 'Replay Tutorial' : 'How to Play — Tutorial'}
             </button>
           </div>
 
