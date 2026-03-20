@@ -1,7 +1,7 @@
-import { supabase } from './supabase';
 import type { GearItemId } from '../constants/items';
 
 const PLAYER_ID_KEY = 'token_wars_player_id';
+const GEAR_UNLOCKS_KEY = 'token_wars_gear_unlocks';
 
 export function getPlayerId(): string {
   let id = localStorage.getItem(PLAYER_ID_KEY);
@@ -12,25 +12,29 @@ export function getPlayerId(): string {
   return id;
 }
 
-export async function fetchUnlockedGear(playerId: string): Promise<GearItemId[]> {
+function loadUnlocks(): Record<string, GearItemId[]> {
   try {
-    const { data, error } = await supabase
-      .from('gear_unlocks')
-      .select('item_id')
-      .eq('player_id', playerId);
-    if (error) return [];
-    return (data ?? []).map(row => row.item_id as GearItemId);
+    const raw = localStorage.getItem(GEAR_UNLOCKS_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, GearItemId[]>) : {};
   } catch {
-    return [];
+    return {};
   }
 }
 
+function saveUnlocks(data: Record<string, GearItemId[]>): void {
+  localStorage.setItem(GEAR_UNLOCKS_KEY, JSON.stringify(data));
+}
+
+export async function fetchUnlockedGear(playerId: string): Promise<GearItemId[]> {
+  const all = loadUnlocks();
+  return all[playerId] ?? [];
+}
+
 export async function unlockGear(playerId: string, itemId: GearItemId): Promise<void> {
-  try {
-    await supabase
-      .from('gear_unlocks')
-      .upsert({ player_id: playerId, item_id: itemId }, { onConflict: 'player_id,item_id', ignoreDuplicates: true });
-  } catch {
-    // silent fail
+  const all = loadUnlocks();
+  const current = all[playerId] ?? [];
+  if (!current.includes(itemId)) {
+    all[playerId] = [...current, itemId];
+    saveUnlocks(all);
   }
 }
