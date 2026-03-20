@@ -62,41 +62,57 @@ export function BuyModal({ assetId, marketEntry, cash, bankSavings, usedCapacity
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+    <div className="theme-modal fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--modal-backdrop)' }}>
+      <div
+        className="max-w-sm w-full mx-4 overflow-hidden shadow-2xl"
+        style={{
+          background: 'var(--modal-bg)',
+          border: 'var(--modal-border-style) var(--modal-border)',
+          borderRadius: 'var(--modal-radius)',
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ background: 'var(--modal-header-bg)', borderBottom: '1px solid var(--color-border)' }}
+        >
           <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-sky-600" />
-            <h2 className="font-bold text-slate-900 dark:text-white">Buy {asset?.name}</h2>
+            <ShoppingCart className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+            <h2 className="font-bold" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)' }}>
+              Buy {asset?.name}
+            </h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
+          <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }} className="transition-colors hover:opacity-70">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="px-5 py-4 space-y-4">
           {marketEntry.isAnomaly && (
-            <div className={`text-xs px-3 py-2 rounded-md font-semibold ${
-              marketEntry.anomalyType === 'surge'
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
-            }`}>
+            <div
+              className="text-xs px-3 py-2 font-semibold"
+              style={{
+                borderRadius: 'var(--radius-sm)',
+                background: marketEntry.anomalyType === 'surge' ? 'var(--event-surge-bg)' : 'var(--event-crash-bg)',
+                color: marketEntry.anomalyType === 'surge' ? 'var(--color-warning)' : 'var(--color-danger)',
+                border: `1px solid ${marketEntry.anomalyType === 'surge' ? 'var(--event-surge-border)' : 'var(--event-crash-border)'}`,
+              }}
+            >
               {marketEntry.anomalyType === 'surge' ? 'SURGE ACTIVE — Price elevated' : 'CRASH ACTIVE — Price depressed'}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Unit price</span>
-              <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{formatCurrencyFull(price)}</div>
+              <span style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>Unit price</span>
+              <div className="font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-primary)' }}>{formatCurrencyFull(price)}</div>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Your cash</span>
-              <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{formatCurrencyFull(cash)}</div>
+              <span style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>Your cash</span>
+              <div className="font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-primary)' }}>{formatCurrencyFull(cash)}</div>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Space available</span>
-              <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{maxByCapacity} units</div>
+              <span style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>Space available</span>
+              <div className="font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-primary)' }}>{maxByCapacity} units</div>
             </div>
           </div>
 
@@ -104,11 +120,14 @@ export function BuyModal({ assetId, marketEntry, cash, bankSavings, usedCapacity
             <button
               onClick={handleDecrement}
               disabled={atMin}
-              className={`w-9 h-9 rounded-lg border flex items-center justify-center font-bold transition-colors ${
-                atMin
-                  ? 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50'
-                  : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }`}
+              className="w-9 h-9 flex items-center justify-center font-bold transition-colors"
+              style={{
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border)',
+                background: atMin ? 'var(--color-bg-muted)' : 'var(--color-bg-raised)',
+                color: atMin ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
+                cursor: atMin ? 'not-allowed' : 'pointer',
+              }}
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
@@ -118,44 +137,70 @@ export function BuyModal({ assetId, marketEntry, cash, bankSavings, usedCapacity
               max={maxQty}
               value={inputStr}
               onChange={handleInputChange}
-              className="flex-1 text-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="flex-1 text-center px-3 py-2 text-sm font-bold focus:outline-none"
+              style={{
+                border: '1px solid var(--color-border-focus)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-bg-input)',
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--font-mono)',
+              }}
             />
             <button
               onClick={handleIncrement}
               disabled={atMax}
-              className={`w-9 h-9 rounded-lg border flex items-center justify-center font-bold transition-colors ${
-                atMax
-                  ? 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50'
-                  : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-              }`}
+              className="w-9 h-9 flex items-center justify-center font-bold transition-colors"
+              style={{
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border)',
+                background: atMax ? 'var(--color-bg-muted)' : 'var(--color-bg-raised)',
+                color: atMax ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
+                cursor: atMax ? 'not-allowed' : 'pointer',
+              }}
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setInputStr(String(maxQty))}
               disabled={atMax}
-              className={`px-3 py-2 text-xs font-bold border rounded-lg transition-colors ${
-                atMax
-                  ? 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed'
-                  : 'text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/30'
-              }`}
+              className="px-3 py-2 text-xs font-bold transition-colors"
+              style={{
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-accent)',
+                color: atMax ? 'var(--color-text-muted)' : 'var(--color-accent)',
+                background: 'transparent',
+                cursor: atMax ? 'not-allowed' : 'pointer',
+              }}
             >
               MAX
             </button>
           </div>
 
           {showBankHint && (
-            <div className="flex items-start gap-2 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg px-3 py-2.5">
-              <Landmark className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-sky-800 dark:text-sky-300 leading-snug">
+            <div
+              className="flex items-start gap-2 px-3 py-2.5"
+              style={{
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-bank-muted)',
+                border: '1px solid var(--color-bank-border)',
+              }}
+            >
+              <Landmark className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--color-bank)' }} />
+              <p className="text-xs leading-snug" style={{ color: 'var(--color-bank)', fontFamily: 'var(--font-body)' }}>
                 You have {formatCurrencyFull(bankSavings)} in the bank. Withdraw first to afford {extraAffordable} more unit{extraAffordable !== 1 ? 's' : ''}.
               </p>
             </div>
           )}
 
-          <div className="flex justify-between items-center py-2 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Total cost</span>
-            <span className={`font-mono font-bold text-lg ${canAfford ? 'text-slate-800 dark:text-slate-100' : 'text-red-600 dark:text-red-400'}`}>
+          <div
+            className="flex justify-between items-center py-2"
+            style={{ borderTop: '1px solid var(--color-border-light)' }}
+          >
+            <span className="text-sm font-semibold" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}>Total cost</span>
+            <span
+              className="font-bold text-lg"
+              style={{ fontFamily: 'var(--font-mono)', color: canAfford ? 'var(--color-text-primary)' : 'var(--color-danger)' }}
+            >
               {formatCurrencyFull(totalCost)}
             </span>
           </div>
@@ -163,7 +208,7 @@ export function BuyModal({ assetId, marketEntry, cash, bankSavings, usedCapacity
           <button
             onClick={handleBuy}
             disabled={!canAfford || maxQty <= 0}
-            className="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors"
+            className="theme-btn-primary w-full py-2.5 font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {maxQty <= 0 ? 'Cannot Afford / No Space' : `Buy ${quantity || 0} unit${quantity !== 1 ? 's' : ''}`}
           </button>

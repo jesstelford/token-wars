@@ -21,58 +21,59 @@ export function FreeTokenModal({ assetId, quantity, communityName, onClose }: Fr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: 'var(--modal-backdrop)' }}>
+      <div className="shadow-2xl max-w-sm w-full mx-4 overflow-hidden" style={{ background: 'var(--modal-bg)', border: 'var(--modal-border-style) var(--modal-border)', borderRadius: 'var(--modal-radius)' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ background: 'var(--modal-header-bg)', borderBottom: '1px solid var(--color-border)' }}>
           <div className="flex items-center gap-2">
             <Gift className="w-5 h-5 text-emerald-500" />
-            <h2 className="font-bold text-slate-900 dark:text-white">Free Tokens Received</h2>
+            <h2 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Free Tokens Received</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
+          <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }} className="transition-colors hover:opacity-80">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="px-5 py-5 space-y-4">
           <div className="flex flex-col items-center gap-3 py-3">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'var(--color-success-muted)' }}>
               <Gift className="w-7 h-7 text-emerald-500" />
             </div>
             <div className="text-center">
-              <div className="text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+              <div className="text-3xl font-black" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}>
                 +{quantity}
               </div>
-              <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
+              <div className="text-lg font-bold mt-0.5" style={{ color: 'var(--color-text-primary)' }}>
                 {asset?.name}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
                 {tierLabels[asset?.tier ?? 4]}
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-4 py-3 space-y-2 text-sm">
+          <div className="px-4 py-3 space-y-2 text-sm" style={{ background: 'var(--color-bg-raised)', borderRadius: 'var(--radius-sm)' }}>
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Source</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">{communityName}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>Source</span>
+              <span className="font-semibold" style={{ color: 'var(--color-text-secondary)' }}>{communityName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Market value each</span>
-              <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">—</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>Market value each</span>
+              <span className="font-semibold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>—</span>
             </div>
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Added to inventory</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">+{quantity} units</span>
+            <div className="flex justify-between pt-2" style={{ borderTop: '1px solid var(--color-border-light)' }}>
+              <span className="font-semibold" style={{ color: 'var(--color-text-secondary)' }}>Added to inventory</span>
+              <span className="font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}>+{quantity} units</span>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
+          <p className="text-xs text-center leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
             These tokens were acquired at no cost. They'll show a $0 average purchase price in your inventory.
           </p>
 
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-colors"
+            className="w-full py-2.5 font-bold text-sm transition-colors"
+            style={{ background: 'var(--color-success)', color: 'var(--color-text-inverse)', borderRadius: 'var(--radius-sm)' }}
           >
             Collect Tokens
           </button>

@@ -18,22 +18,42 @@ export function MarketView({ state, hoveredAssetId, onHoverAsset, onBuy }: Marke
   const visibleAssets = SORTED_ASSETS.filter(a => available.has(a.id));
 
   return (
-    <div className="flex flex-col min-w-0 border-0 sm:border border-slate-200 dark:border-slate-700 rounded-none sm:rounded-lg overflow-hidden bg-white dark:bg-slate-900">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex-none">
-        <BarChart2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Market</h2>
+    <div
+      className="flex flex-col min-w-0 border-0 sm:border overflow-hidden theme-panel"
+      style={{ borderRadius: '0', borderColor: 'var(--color-border)' }}
+    >
+      <div
+        className="theme-panel-header flex items-center gap-2 px-3 py-2 flex-none"
+      >
+        <BarChart2 className="w-4 h-4" style={{ color: 'var(--panel-header-text)' }} />
+        <h2
+          className="text-xs font-bold uppercase tracking-widest"
+          style={{ color: 'var(--panel-header-text)', fontFamily: 'var(--font-heading)' }}
+        >
+          Market
+        </h2>
       </div>
 
-      <div className="sm:flex-1 sm:overflow-y-auto">
+      <div className="sm:flex-1 sm:overflow-y-auto" style={{ background: 'var(--color-bg-surface)' }}>
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-10">
-            <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-              <th className="px-3 py-1 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Token</th>
-              <th className="px-3 py-1 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">$/1M tok</th>
+            <tr style={{ background: 'var(--table-header-bg)', borderBottom: '1px solid var(--color-border)' }}>
+              <th
+                className="px-3 py-1 text-left text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)' }}
+              >
+                Token
+              </th>
+              <th
+                className="px-3 py-1 text-right text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)' }}
+              >
+                $/1M tok
+              </th>
               <th className="w-16 px-2 py-1"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody>
             {visibleAssets.map(asset => (
               <AssetRow
                 key={asset.id}

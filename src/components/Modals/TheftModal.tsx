@@ -12,50 +12,54 @@ export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalPr
   const isRobbery = type === 'robbery';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 border border-red-300 dark:border-red-800 rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
-        <div className={`px-6 py-4 flex items-center gap-3 ${isRobbery ? 'bg-red-600' : 'bg-slate-800 dark:bg-slate-700'}`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: 'var(--modal-backdrop)' }}>
+      <div className="shadow-2xl max-w-sm w-full mx-4 overflow-hidden" style={{ background: 'var(--modal-bg)', border: '1px solid var(--color-danger)', borderRadius: 'var(--modal-radius)' }}>
+        <div
+          className="px-6 py-4 flex items-center gap-3"
+          style={isRobbery ? { background: '#dc2626' } : { background: 'var(--color-bg-raised)' }}
+        >
           <AlertTriangle className="w-6 h-6 text-white shrink-0" />
           <div>
             <h2 className="text-white font-bold text-lg tracking-tight">
               {isRobbery ? 'You Were Robbed' : 'Bank Account Hacked'}
             </h2>
-            <p className={`text-xs ${isRobbery ? 'text-red-200' : 'text-slate-300'}`}>
+            <p className="text-xs" style={{ color: isRobbery ? '#fecaca' : 'var(--color-text-secondary)' }}>
               {isRobbery ? 'Cash stolen from your wallet' : 'Savings drained remotely'}
             </p>
           </div>
-          <button onClick={onClose} className="ml-auto text-white/70 hover:text-white transition-colors">
+          <button onClick={onClose} className="ml-auto transition-colors hover:opacity-80" style={{ color: 'var(--color-text-muted)' }}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-6 py-5">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-5">
+          <div className="p-4 mb-5" style={{ background: 'var(--color-danger-muted)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-sm)' }}>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Amount lost</span>
-              <span className="font-mono font-bold text-red-600 dark:text-red-400 text-lg">
+              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Amount lost</span>
+              <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-danger)' }}>
                 -{formatCurrencyFull(amountLost)}
               </span>
             </div>
-            <div className="flex justify-between items-center border-t border-red-200 dark:border-red-800 pt-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
+            <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid var(--color-danger)' }}>
+              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 {isRobbery ? 'Cash remaining' : 'Savings remaining'}
               </span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-100">
+              <span className="font-bold" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-primary)' }}>
                 {formatCurrencyFull(newTotal)}
               </span>
             </div>
           </div>
 
           {isRobbery && (
-            <div className="mb-4 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 leading-snug">
+            <div className="mb-4 text-xs px-3 py-2.5 leading-snug" style={{ color: 'var(--color-text-muted)', background: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
               Tip: Cash on hand is always at risk. Keep your savings in the bank — robbers can't touch it.
             </div>
           )}
 
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-lg bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+            className="w-full py-2.5 font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
+            style={{ background: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-sm)' }}
           >
             Continue
           </button>

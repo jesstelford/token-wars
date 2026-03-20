@@ -9,6 +9,7 @@ import type { GearItemId } from '../../constants/items';
 import { getAllGear } from '../../utils/gearEffects';
 import { GearIcon } from '../Gear/GearIcon';
 import { GearTooltip } from '../Gear/GearTooltip';
+import { Header } from '../Header/Header';
 
 interface GameOverScreenProps {
   state: GameState;
@@ -46,142 +47,209 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
   const isWin = score >= 0;
 
   return (
-    <div className={`relative min-h-screen flex flex-col items-center justify-center p-6 ${isWin ? 'bg-slate-50 dark:bg-slate-950' : 'bg-slate-200 dark:bg-slate-950'}`}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: 'var(--color-bg-root)' }}
+    >
+      <Header />
       {isWin && <Confetti />}
-      {!isWin && (
-        <div className="fixed inset-0 z-0 pointer-events-none" style={{ backdropFilter: 'grayscale(85%) brightness(0.75) contrast(0.9)' }} />
-      )}
-      <div className="relative z-20 w-full max-w-md" style={!isWin ? { filter: 'grayscale(60%) contrast(0.85) brightness(0.9)' } : undefined}>
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-4">
-            {score >= 100000 ? '🏆' : score >= 0 ? '📊' : '💸'}
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-1">
-            Simulation Complete
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Day {state.current_day} / 31 — {state.health <= 0 ? 'Vibes depleted' : 'Time expired'}</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm mb-5">
-          <div className={`px-5 py-4 text-center border-b border-slate-200 dark:border-slate-700 ${
-            score >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
-          }`}>
-            <div className={`text-4xl font-black font-mono mb-1 ${score >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-              {formatCurrencyFull(score)}
+      <div className="relative flex-1 flex flex-col items-center justify-center p-6">
+        <div className="relative z-20 w-full max-w-md" style={!isWin ? { filter: 'grayscale(30%) brightness(0.9)' } : undefined}>
+          <div className="text-center mb-8">
+            <div className="text-5xl mb-4">
+              {score >= 100000 ? '🏆' : score >= 0 ? '📊' : '💸'}
             </div>
-            <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">{tier.label}</div>
-            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">{tier.description}</div>
+            <h1
+              className="text-3xl font-black mb-1"
+              style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text-heading)' }}
+            >
+              Simulation Complete
+            </h1>
+            <p
+              className="text-sm"
+              style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}
+            >
+              Day {state.current_day} / 31 — {state.health <= 0 ? 'Vibes depleted' : 'Time expired'}
+            </p>
           </div>
 
-          <div className="px-5 py-4 space-y-2.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Cash on hand</span>
-              <span className="font-mono font-semibold text-slate-800 dark:text-slate-100">{formatCurrencyFull(state.current_cash)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Bank savings</span>
-              <span className="font-mono font-semibold text-sky-600 dark:text-sky-400">{formatCurrencyFull(state.bank_savings)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Inventory value</span>
-              <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">{formatCurrencyFull(inventoryValue)}</span>
-            </div>
-            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
-              <span className="text-slate-500 dark:text-slate-400">Unpaid debt <span className="text-red-500">(×2 penalty)</span></span>
-              <span className="font-mono font-semibold text-red-600 dark:text-red-400">-{formatCurrencyFull(state.current_debt * 2)}</span>
-            </div>
-            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
-              <span className="font-bold text-slate-700 dark:text-slate-200">Final Score</span>
-              <span className={`font-mono font-black text-base ${score >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          <div
+            className="overflow-hidden shadow-sm mb-5"
+            style={{
+              background: 'var(--color-bg-surface)',
+              border: 'var(--modal-border-style)',
+              borderRadius: 'var(--modal-radius)',
+            }}
+          >
+            <div
+              className="px-5 py-4 text-center"
+              style={{
+                background: isWin ? 'var(--color-success-muted)' : 'var(--color-danger-muted)',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div
+                className="text-4xl font-black mb-1"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  color: isWin ? 'var(--color-success)' : 'var(--color-danger)',
+                }}
+              >
                 {formatCurrencyFull(score)}
-              </span>
+              </div>
+              <div className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)' }}>{tier.label}</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-body)' }}>{tier.description}</div>
+            </div>
+
+            <div className="px-5 py-4 space-y-2.5 text-sm">
+              {[
+                { label: 'Cash on hand', value: formatCurrencyFull(state.current_cash), color: 'var(--color-text-primary)' },
+                { label: 'Bank savings', value: formatCurrencyFull(state.bank_savings), color: 'var(--color-bank)' },
+                { label: 'Inventory value', value: formatCurrencyFull(inventoryValue), color: 'var(--color-text-secondary)' },
+              ].map(row => (
+                <div key={row.label} className="flex justify-between">
+                  <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}>{row.label}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: row.color }}>{row.value}</span>
+                </div>
+              ))}
+              <div
+                className="flex justify-between pt-2"
+                style={{ borderTop: '1px solid var(--color-border-light)' }}
+              >
+                <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}>
+                  Unpaid debt <span style={{ color: 'var(--color-danger)' }}>(×2 penalty)</span>
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-danger)' }}>
+                  -{formatCurrencyFull(state.current_debt * 2)}
+                </span>
+              </div>
+              <div
+                className="flex justify-between pt-2"
+                style={{ borderTop: '1px solid var(--color-border-light)' }}
+              >
+                <span style={{ fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)' }}>Final Score</span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 900,
+                    fontSize: '1rem',
+                    color: isWin ? 'var(--color-success)' : 'var(--color-danger)',
+                  }}
+                >
+                  {formatCurrencyFull(score)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {allGear.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Gear Collected</span>
-              <span className="text-xs text-slate-400">{allGear.length} / 3</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {allGear.map(id => {
-                const item = GEAR_MAP[id];
+          {allGear.length > 0 && (
+            <div
+              className="px-5 py-4 mb-5 shadow-sm"
+              style={{
+                background: 'var(--color-bg-surface)',
+                border: 'var(--modal-border-style)',
+                borderRadius: 'var(--modal-radius)',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)' }}>Gear Collected</span>
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{allGear.length} / 3</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allGear.map(id => {
+                  const item = GEAR_MAP[id];
+                  if (!item) return null;
+                  const colors = RARITY_COLORS[item.rarity];
+                  const isEquipped = state.equipped_gear?.includes(id);
+                  return (
+                    <div
+                      key={id}
+                      className={`flex items-center gap-2 px-2.5 py-1.5 border ${colors.border} ${colors.bg} cursor-default`}
+                      style={{ borderRadius: 'var(--radius-sm)' }}
+                      onMouseEnter={e => setGearTooltip({ id, rect: e.currentTarget.getBoundingClientRect() })}
+                      onMouseLeave={() => setGearTooltip(null)}
+                    >
+                      <GearIcon name={item.icon} className={`w-3 h-3 ${colors.text}`} />
+                      <span className={`text-xs font-semibold ${colors.text}`}>{item.name}</span>
+                      {isEquipped && <span className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>start</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              {gearTooltip && (() => {
+                const item = GEAR_MAP[gearTooltip.id];
                 if (!item) return null;
-                const colors = RARITY_COLORS[item.rarity];
-                const isEquipped = state.equipped_gear?.includes(id);
-                return (
-                  <div
-                    key={id}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${colors.border} ${colors.bg} cursor-default`}
-                    onMouseEnter={e => setGearTooltip({ id, rect: e.currentTarget.getBoundingClientRect() })}
-                    onMouseLeave={() => setGearTooltip(null)}
-                  >
-                    <GearIcon name={item.icon} className={`w-3 h-3 ${colors.text}`} />
-                    <span className={`text-xs font-semibold ${colors.text}`}>{item.name}</span>
-                    {isEquipped && <span className="text-xs text-slate-500 italic">start</span>}
-                  </div>
-                );
-              })}
-            </div>
-            {gearTooltip && (() => {
-              const item = GEAR_MAP[gearTooltip.id];
-              if (!item) return null;
-              const isEquipped = state.equipped_gear?.includes(gearTooltip.id) ?? false;
-              return <GearTooltip item={item} isEquipped={isEquipped} anchorRect={gearTooltip.rect} />;
-            })()}
-          </div>
-        )}
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Score Saved</span>
-          </div>
-          {editing ? (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleNameConfirm(); if (e.key === 'Escape') setEditing(false); }}
-                placeholder="Enter your name (optional)"
-                maxLength={24}
-                autoFocus
-                className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
-              <button
-                onClick={handleNameConfirm}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-1"
-              >
-                <Check className="w-3.5 h-3.5" />
-                Save
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                Saved as <span className="font-semibold text-slate-800 dark:text-slate-100">{name.trim() || 'Anon'}</span>
-              </span>
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1 text-xs text-sky-600 dark:text-sky-400 hover:underline font-semibold"
-              >
-                <Pencil className="w-3 h-3" />
-                Edit name
-              </button>
+                const isEquipped = state.equipped_gear?.includes(gearTooltip.id) ?? false;
+                return <GearTooltip item={item} isEquipped={isEquipped} anchorRect={gearTooltip.rect} />;
+              })()}
             </div>
           )}
-        </div>
 
-        <button
-          onClick={onNewGame}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-base transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Play Again
-        </button>
+          <div
+            className="px-5 py-4 mb-5 shadow-sm"
+            style={{
+              background: 'var(--color-bg-surface)',
+              border: 'var(--modal-border-style)',
+              borderRadius: 'var(--modal-radius)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
+              <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)' }}>Score Saved</span>
+            </div>
+            {editing ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleNameConfirm(); if (e.key === 'Escape') setEditing(false); }}
+                  placeholder="Enter your name (optional)"
+                  maxLength={24}
+                  autoFocus
+                  className="flex-1 px-3 py-2 text-sm"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'var(--font-body)',
+                  }}
+                />
+                <button
+                  onClick={handleNameConfirm}
+                  className="theme-btn-primary px-4 py-2 text-sm flex items-center gap-1"
+                  style={{ background: 'var(--color-warning)', color: '#000', borderColor: 'var(--color-warning)' }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Save
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-sm" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}>
+                  Saved as <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{name.trim() || 'Anon'}</span>
+                </span>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-1 text-xs font-semibold hover:underline"
+                  style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-body)' }}
+                >
+                  <Pencil className="w-3 h-3" />
+                  Edit name
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={onNewGame}
+            className="theme-btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-base"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Play Again
+          </button>
+        </div>
       </div>
     </div>
   );
