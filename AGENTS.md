@@ -15,6 +15,31 @@ React 18 + TypeScript 5 | Vite 5 | Tailwind CSS 3 | Lucide React | LocalStorage 
 
 ---
 
+## CRITICAL: Data Persistence Rules
+
+**DO NOT use Supabase, any remote database, or any external API for data persistence.**
+
+All data must be stored exclusively in the browser's `localStorage`. This is a hard requirement with no exceptions.
+
+- There is no Supabase client in this project. Do not add `@supabase/supabase-js` or any equivalent.
+- There is no `src/lib/supabase.ts` file. Do not create one.
+- There are no database migrations. Do not create a `supabase/` directory.
+- There is no backend, no server, no auth system, and no network calls for game data.
+- The `useLocalStorage` hook (`src/hooks/useLocalStorage.ts`) is the standard way to read/write persistent data.
+- For non-React contexts, read/write `localStorage` directly.
+
+Current localStorage keys used by the app:
+
+| Key | Contents |
+|---|---|
+| `token_wars_save` | Active game state (`GameState`) |
+| `token_wars_scores` | High score list |
+| `token_wars_theme_v2` | Active theme id + light/dark mode |
+| `token_wars_player_id` | Stable anonymous player UUID |
+| `token_wars_gear_unlocks` | Unlocked gear items per player |
+
+---
+
 ## Source Map
 
 ```
