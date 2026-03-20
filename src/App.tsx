@@ -133,7 +133,7 @@ export default function App() {
       <div className={darkMode ? 'dark' : ''}>
         <GameOverScreen
           state={state}
-          onSubmitScore={name => submitScore(name)}
+          onSubmitScore={(name, updateLatest) => submitScore(name, updateLatest)}
           onNewGame={() => {
             handleNewGame();
             setScreenPhase('title');
@@ -208,6 +208,7 @@ export default function App() {
             assetId={buyAssetId}
             marketEntry={buyMarketEntry}
             cash={state.current_cash}
+            bankSavings={state.bank_savings}
             usedCapacity={usedCapacity}
             totalCapacity={state.capacity}
             onBuy={(id, qty) => { buyAsset(id, qty); setActiveModal(null); }}

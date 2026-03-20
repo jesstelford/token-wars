@@ -47,6 +47,12 @@ export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalPr
             </div>
           </div>
 
+          {isRobbery && (
+            <div className="mb-4 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 leading-snug">
+              Tip: Cash on hand is always at risk. Keep your savings in the bank — robbers can't touch it.
+            </div>
+          )}
+
           <button
             onClick={onClose}
             className="w-full py-2.5 rounded-lg bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"

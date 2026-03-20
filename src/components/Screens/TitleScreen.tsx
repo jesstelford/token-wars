@@ -92,7 +92,7 @@ export function TitleScreen({ scores, hasSave, darkMode, onToggleDark, onNewGame
                   <span className="text-sm w-6 text-center">
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span className="font-mono text-slate-400">{i + 1}</span>}
                   </span>
-                  <span className="flex-1 text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{entry.name}</span>
+                  <span className="flex-1 text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{entry.name || 'Anon'}</span>
                   <span className={`font-mono font-bold text-sm ${entry.score >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                     {formatCurrencyFull(entry.score)}
                   </span>

@@ -265,14 +265,23 @@ export function useGameState() {
     });
   }, [setState]);
 
-  const submitScore = useCallback((playerName: string) => {
+  const submitScore = useCallback((playerName: string, updateLatest?: boolean) => {
     setScores(prev => {
       const entry: HighScoreEntry = {
-        name: playerName.trim() || 'Anonymous',
+        name: playerName.trim() || 'Anon',
         score: calculateScore(state),
         date: new Date().toLocaleDateString(),
         days_survived: state.current_day,
       };
+      if (updateLatest) {
+        const targetScore = entry.score;
+        const idx = prev.findIndex(e => e.score === targetScore && e.date === entry.date && e.days_survived === entry.days_survived);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = entry;
+          return updated.sort((a, b) => b.score - a.score);
+        }
+      }
       return [...prev, entry].sort((a, b) => b.score - a.score);
     });
   }, [setScores, state]);

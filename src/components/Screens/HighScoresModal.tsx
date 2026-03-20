@@ -44,7 +44,7 @@ export function HighScoresModal({ scores, onClose }: HighScoresModalProps) {
                     <td className="px-4 py-3 font-mono text-slate-500">
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{entry.name}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{entry.name || 'Anon'}</td>
                     <td className={`px-4 py-3 text-right font-mono font-bold ${entry.score >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                       {formatCurrencyFull(entry.score)}
                     </td>

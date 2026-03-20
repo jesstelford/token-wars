@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ShoppingCart, Minus, Plus } from 'lucide-react';
+import { X, ShoppingCart, Minus, Plus, Landmark } from 'lucide-react';
 import { formatCurrencyFull } from '../../utils/formatting';
 import type { AssetId } from '../../constants/assets';
 import { ASSET_MAP } from '../../constants/assets';
@@ -9,18 +9,23 @@ interface BuyModalProps {
   assetId: AssetId;
   marketEntry: MarketPrice;
   cash: number;
+  bankSavings: number;
   usedCapacity: number;
   totalCapacity: number;
   onBuy: (assetId: AssetId, quantity: number) => void;
   onClose: () => void;
 }
 
-export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapacity, onBuy, onClose }: BuyModalProps) {
+export function BuyModal({ assetId, marketEntry, cash, bankSavings, usedCapacity, totalCapacity, onBuy, onClose }: BuyModalProps) {
   const asset = ASSET_MAP[assetId];
   const price = marketEntry.price;
   const maxByCapacity = totalCapacity - usedCapacity;
   const maxByFunds = Math.floor(cash / price);
   const maxQty = Math.min(maxByCapacity, maxByFunds);
+
+  const maxWithBank = Math.min(maxByCapacity, Math.floor((cash + bankSavings) / price));
+  const extraAffordable = maxWithBank - maxQty;
+  const showBankHint = bankSavings > 0 && extraAffordable > 0;
 
   const [inputStr, setInputStr] = useState('1');
   const quantity = parseInt(inputStr) || 0;
@@ -93,10 +98,6 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
               <span className="text-slate-500 dark:text-slate-400">Space available</span>
               <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{maxByCapacity} units</div>
             </div>
-            <div>
-              <span className="text-slate-500 dark:text-slate-400">Max affordable</span>
-              <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{maxByFunds} units</div>
-            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -142,6 +143,15 @@ export function BuyModal({ assetId, marketEntry, cash, usedCapacity, totalCapaci
               MAX
             </button>
           </div>
+
+          {showBankHint && (
+            <div className="flex items-start gap-2 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg px-3 py-2.5">
+              <Landmark className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-sky-800 dark:text-sky-300 leading-snug">
+                You have {formatCurrencyFull(bankSavings)} in the bank. Withdraw first to afford {extraAffordable} more unit{extraAffordable !== 1 ? 's' : ''}.
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-between items-center py-2 border-t border-slate-100 dark:border-slate-800">
             <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Total cost</span>

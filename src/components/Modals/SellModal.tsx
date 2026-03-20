@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Tag } from 'lucide-react';
+import { X, Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrencyFull } from '../../utils/formatting';
 import type { AssetId } from '../../constants/assets';
 import { ASSET_MAP } from '../../constants/assets';
@@ -17,9 +17,13 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
   const asset = ASSET_MAP[assetId];
   const price = marketEntry.price;
   const maxQty = inventoryItem.quantity;
+  const avgPurchasePrice = inventoryItem.avgPurchasePrice ?? 0;
+
   const [inputStr, setInputStr] = useState(String(maxQty));
   const quantity = parseInt(inputStr) || 0;
   const totalRevenue = price * quantity;
+  const totalCost = avgPurchasePrice * quantity;
+  const profitLoss = avgPurchasePrice > 0 ? totalRevenue - totalCost : null;
   const isValid = quantity > 0 && quantity <= maxQty;
 
   function handleDecrement() {
@@ -81,6 +85,12 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
               <span className="text-slate-500 dark:text-slate-400">Held quantity</span>
               <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{maxQty} units</div>
             </div>
+            {avgPurchasePrice > 0 && (
+              <div>
+                <span className="text-slate-500 dark:text-slate-400">Avg buy price</span>
+                <div className="font-mono font-bold text-slate-800 dark:text-slate-100">{formatCurrencyFull(avgPurchasePrice)}</div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -106,11 +116,27 @@ export function SellModal({ assetId, marketEntry, inventoryItem, onSell, onClose
             >MAX</button>
           </div>
 
-          <div className="flex justify-between items-center py-2 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Total revenue</span>
-            <span className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">
-              {formatCurrencyFull(totalRevenue)}
-            </span>
+          <div className="space-y-2 py-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Total revenue</span>
+              <span className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                {formatCurrencyFull(totalRevenue)}
+              </span>
+            </div>
+            {profitLoss !== null && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  {profitLoss >= 0
+                    ? <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                    : <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+                  }
+                  {profitLoss >= 0 ? 'Profit' : 'Loss'}
+                </span>
+                <span className={`font-mono font-bold text-sm ${profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {profitLoss >= 0 ? '+' : ''}{formatCurrencyFull(profitLoss)}
+                </span>
+              </div>
+            )}
           </div>
 
           <button

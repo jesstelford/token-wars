@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Trophy, RotateCcw, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Trophy, RotateCcw, Pencil, Check } from 'lucide-react';
 import type { GameState } from '../../types/game';
 import { calculateScore } from '../../utils/scoring';
 import { getScoreTier } from '../../utils/scoring';
@@ -8,20 +8,28 @@ import { Confetti } from './Confetti';
 
 interface GameOverScreenProps {
   state: GameState;
-  onSubmitScore: (name: string) => void;
+  onSubmitScore: (name: string, updateLatest?: boolean) => void;
   onNewGame: () => void;
 }
 
 export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScreenProps) {
   const [name, setName] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const submitted = useRef(false);
 
   const score = calculateScore(state);
   const tier = getScoreTier(score);
 
-  function handleSubmit() {
-    onSubmitScore(name);
-    setSubmitted(true);
+  useEffect(() => {
+    if (!submitted.current) {
+      submitted.current = true;
+      onSubmitScore('');
+    }
+  }, []);
+
+  function handleNameConfirm() {
+    onSubmitScore(name.trim(), true);
+    setEditing(false);
   }
 
   const inventoryValue = state.inventory.reduce((sum, item) => {
@@ -85,35 +93,46 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
           </div>
         </div>
 
-        {!submitted ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Submit Your Score</span>
-            </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-4 mb-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Score Saved</span>
+          </div>
+          {editing ? (
             <div className="flex gap-2">
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Enter your name"
+                onKeyDown={e => { if (e.key === 'Enter') handleNameConfirm(); if (e.key === 'Escape') setEditing(false); }}
+                placeholder="Enter your name (optional)"
                 maxLength={24}
+                autoFocus
                 className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
               <button
-                onClick={handleSubmit}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-lg transition-colors"
+                onClick={handleNameConfirm}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-1"
               >
-                Submit
+                <Check className="w-3.5 h-3.5" />
+                Save
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 justify-center text-emerald-600 dark:text-emerald-400 mb-5 text-sm font-semibold">
-            <CheckCircle className="w-4 h-4" />
-            Score submitted!
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Saved as <span className="font-semibold text-slate-800 dark:text-slate-100">{name.trim() || 'Anon'}</span>
+              </span>
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1 text-xs text-sky-600 dark:text-sky-400 hover:underline font-semibold"
+              >
+                <Pencil className="w-3 h-3" />
+                Edit name
+              </button>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={onNewGame}
@@ -126,4 +145,3 @@ export function GameOverScreen({ state, onSubmitScore, onNewGame }: GameOverScre
     </div>
   );
 }
-
