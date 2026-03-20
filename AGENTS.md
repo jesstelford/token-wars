@@ -145,6 +145,7 @@ High scores stored as `{ name, score, date, days_survived }[]`, sorted descendin
 ## Styling Conventions
 
 - Tailwind utility-first; dark mode via `class` strategy (`dark:` prefix)
+- **All screens must respect the current light/dark mode.** The `dark` class is applied to the root wrapper `<div>` in `App.tsx` based on the `darkMode` state. Every screen component (`TitleScreen`, `GearLoadoutScreen`, `GameOverScreen`, and the main game view) must wrap its content in light-mode-safe classes (e.g. `bg-slate-100 dark:bg-slate-950`) and propagate `darkMode` + `onToggleDark` props when they render the `<Header>` component.
 - Anomaly surge: amber; crash: red. Regular price moves: no color
 - Health bar: green >60, amber 30–60, red <30
 - 8px spacing system; max-width 1024px centered

@@ -158,6 +158,8 @@ export default function App() {
       <div className={darkMode ? 'dark' : ''}>
         <GearLoadoutScreen
           unlockedGearIds={unlockedGear}
+          darkMode={darkMode}
+          onToggleDark={toggleDark}
           onStart={handleLoadoutStart}
           onSkip={handleLoadoutSkip}
         />
