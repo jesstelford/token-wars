@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, Play, RotateCcw, TrendingUp, BookOpen } from 'lucide-react';
+import { Trophy, Play, RotateCcw, TrendingUp, BookOpen, Gamepad2 } from 'lucide-react';
 import type { HighScoreEntry } from '../../types/game';
 import { HighScoresModal } from './HighScoresModal';
 import { formatCurrencyFull } from '../../utils/formatting';
@@ -12,9 +12,10 @@ interface TitleScreenProps {
   onNewGame: () => void;
   onContinue: () => void;
   onTutorial: () => void;
+  onArcade: () => void;
 }
 
-export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial }: TitleScreenProps) {
+export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial, onArcade }: TitleScreenProps) {
   const [showAllScores, setShowAllScores] = useState(false);
   const top5 = scores.slice(0, 5);
   const tutorialSeen = hasTutorialBeenSeen();
@@ -75,6 +76,13 @@ export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial
             >
               <BookOpen className="w-4 h-4" />
               {tutorialSeen ? 'Replay Tutorial' : 'How to Play — Tutorial'}
+            </button>
+            <button
+              onClick={onArcade}
+              className="theme-btn-secondary w-full flex items-center justify-center gap-2 py-3 text-sm"
+            >
+              <Gamepad2 className="w-4 h-4" />
+              Mini-Game Arcade
             </button>
           </div>
 

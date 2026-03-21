@@ -30,6 +30,7 @@ import { VendorModal } from './components/Modals/VendorModal';
 import { TitleScreen } from './components/Screens/TitleScreen';
 import { GameOverScreen } from './components/Screens/GameOverScreen';
 import { GearLoadoutScreen } from './components/Screens/GearLoadoutScreen';
+import { MiniGameArcadeScreen } from './components/Screens/MiniGameArcadeScreen';
 import { GearPanel } from './components/Gear/GearPanel';
 import { TutorialOverlay } from './components/Tutorial/TutorialOverlay';
 
@@ -45,7 +46,7 @@ export default function App() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<AssetId | null>(null);
   const [financeTab, setFinanceTab] = useState<'debt' | 'deposit' | 'withdraw'>('debt');
-  const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game'>('title');
+  const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game' | 'arcade'>('title');
   const [hoveredAssetId, setHoveredAssetId] = useState<AssetId | null>(null);
   const [unlockedGear, setUnlockedGear] = useState<GearItemId[]>([]);
 
@@ -238,6 +239,14 @@ export default function App() {
     );
   }
 
+  if (screenPhase === 'arcade') {
+    return (
+      <MiniGameArcadeScreen
+        onBack={() => setScreenPhase('title')}
+      />
+    );
+  }
+
   if (screenPhase === 'title' && !isGameOver) {
     return (
       <TitleScreen
@@ -246,6 +255,7 @@ export default function App() {
         onNewGame={handleNewGame}
         onContinue={handleContinue}
         onTutorial={handleTutorial}
+        onArcade={() => setScreenPhase('arcade')}
       />
     );
   }
