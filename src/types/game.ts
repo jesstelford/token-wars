@@ -43,12 +43,14 @@ export interface EncounterState {
   communityName: string;
   message: string;
   pendingItemDrop?: GearItemId;
+  miniGamePerformance?: number;
 }
 
 export interface PendingTheft {
   type: 'robbery' | 'bank_hack';
   amountLost: number;
   newTotal: number;
+  originalAmountLost?: number;
 }
 
 export interface PendingItemDrop {

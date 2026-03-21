@@ -112,11 +112,36 @@ export function useGameState() {
     }));
   }, [setState]);
 
-  const dismissTheft = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      pending_thefts: prev.pending_thefts.slice(1),
-    }));
+  const dismissTheft = useCallback((adjustedAmountLost?: number, _adjustedNewTotal?: number) => {
+    setState(prev => {
+      const theft = prev.pending_thefts[0];
+      if (!theft) return { ...prev, pending_thefts: prev.pending_thefts.slice(1) };
+
+      if (adjustedAmountLost !== undefined) {
+        const originalAmount = theft.amountLost;
+        const refund = originalAmount - adjustedAmountLost;
+        if (refund > 0) {
+          if (theft.type === 'robbery') {
+            return {
+              ...prev,
+              current_cash: prev.current_cash + refund,
+              pending_thefts: prev.pending_thefts.slice(1),
+            };
+          } else {
+            return {
+              ...prev,
+              bank_savings: prev.bank_savings + refund,
+              pending_thefts: prev.pending_thefts.slice(1),
+            };
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        pending_thefts: prev.pending_thefts.slice(1),
+      };
+    });
   }, [setState]);
 
   const collectItem = useCallback((itemId: GearItemId) => {

@@ -361,7 +361,7 @@ export default function App() {
             type={pendingTheft.type}
             amountLost={pendingTheft.amountLost}
             newTotal={pendingTheft.newTotal}
-            onClose={dismissTheft}
+            onClose={(adjustedAmountLost, adjustedNewTotal) => dismissTheft(adjustedAmountLost, adjustedNewTotal)}
           />
         )}
 

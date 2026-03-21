@@ -6,6 +6,8 @@ import { GEAR_MAP, RARITY_COLORS } from '../../constants/items';
 import { GearIcon } from '../Gear/GearIcon';
 import { buildDetailedInventoryLoss, type LostInventoryEntry } from '../../utils/encounters';
 import type { ActiveEffects } from '../../utils/gearEffects';
+import { SignalScramble } from '../MiniGames/SignalScramble';
+import { VoltageSurge } from '../MiniGames/VoltageSurge';
 
 interface EncounterModalProps {
   encounter: EncounterState;
@@ -16,6 +18,7 @@ interface EncounterModalProps {
 }
 
 type Decision = 'run' | 'fight' | null;
+type MiniGamePhase = 'choose' | 'minigame' | 'result';
 
 interface Result {
   success: boolean;
@@ -26,24 +29,32 @@ interface Result {
   precomputedInventory?: InventoryItem[];
 }
 
-const RUN_SUCCESS_RATE = 0.60;
-const FIGHT_SUCCESS_RATE = 0.30;
-
 export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFight }: EncounterModalProps) {
   const [decision, setDecision] = useState<Decision>(null);
+  const [phase, setPhase] = useState<MiniGamePhase>('choose');
   const [result, setResult] = useState<Result | null>(null);
   const [resolvedSuccess, setResolvedSuccess] = useState<boolean>(false);
 
-  function handleRun() {
-    const success = Math.random() < RUN_SUCCESS_RATE;
+  function handleRunStart() {
     setDecision('run');
+    setPhase('minigame');
+  }
+
+  function handleFightStart() {
+    setDecision('fight');
+    setPhase('minigame');
+  }
+
+  function handleSignalScrambleComplete(performanceScore: number) {
+    const effectiveRate = performanceScore === 0.0
+      ? 0.25
+      : 0.60 + performanceScore * 0.35;
+    const capped = Math.min(0.95, effectiveRate);
+    const success = Math.random() < capped;
     setResolvedSuccess(success);
 
     if (success) {
-      setResult({
-        success,
-        message: 'You slipped away before they could catch you. Close call.',
-      });
+      setResult({ success, message: 'You slipped away before they could catch you. Close call.' });
     } else {
       const { newInventory, lostItems } = buildDetailedInventoryLoss(inventory, gearEffects);
       const lostSummary = lostItems.length > 0
@@ -58,13 +69,21 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
         precomputedInventory: newInventory,
       });
     }
+    setPhase('result');
   }
 
-  function handleFight() {
-    const success = Math.random() < FIGHT_SUCCESS_RATE;
-    const healthLost = success ? 0 : 40 + Math.floor(Math.random() * 11);
+  function handleVoltageSurgeComplete(evadePoints: number, counterPoints: number) {
+    const counterRatio = counterPoints / 5;
+    const evadeRatio = evadePoints / 5;
+    const adjustedSuccessRate = Math.min(0.75, 0.30 + counterRatio * 0.45);
+    const success = Math.random() < adjustedSuccessRate;
+
+    const baseHealthLoss = 40 + Math.floor(Math.random() * 11);
+    const evadeReduction = evadeRatio * 0.60;
+    const gearReduction = gearEffects?.fightHealthLossReduction ?? 0;
+    const healthLost = success ? 0 : Math.round(baseHealthLoss * (1 - evadeReduction) * (1 - gearReduction));
+
     const itemDrop = encounter.pendingItemDrop;
-    setDecision('fight');
     setResolvedSuccess(success);
     setResult({
       success,
@@ -74,6 +93,7 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
         : `You lost the fight. -${healthLost} vibes.`,
       itemDrop: success ? itemDrop : undefined,
     });
+    setPhase('result');
   }
 
   function handleContinue() {
@@ -87,41 +107,51 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: 'var(--modal-backdrop)' }}>
       <div className="shadow-2xl max-w-md w-full mx-4 overflow-hidden" style={{ background: 'var(--modal-bg)', border: '1px solid var(--color-danger)', borderRadius: 'var(--modal-radius)' }}>
-        <div className="bg-red-600 px-6 py-4 flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-white shrink-0" />
+        <div className="px-6 py-4 flex items-center gap-3" style={{ background: 'var(--color-danger)' }}>
+          <AlertTriangle className="w-6 h-6 shrink-0" style={{ color: 'var(--color-text-inverse)' }} />
           <div>
-            <h2 className="text-white font-bold text-lg tracking-tight">Regulator Alert</h2>
-            <p className="text-red-200 text-xs">Encounter in {encounter.communityName}</p>
+            <h2 className="font-bold text-lg tracking-tight" style={{ color: 'var(--color-text-inverse)' }}>Regulator Alert</h2>
+            <p className="text-xs" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }}>Encounter in {encounter.communityName}</p>
           </div>
         </div>
 
         <div className="px-6 py-5">
-          {!result ? (
+          {phase === 'choose' && (
             <>
               <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text-secondary)' }}>{encounter.message}</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={handleRun}
+                  onClick={handleRunStart}
                   className="flex flex-col items-center gap-2 p-4 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 hover:opacity-80"
                   style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-raised)' }}
                 >
                   <span className="text-2xl">🏃</span>
-                  <span className="font-bold text-sky-600">Run</span>
-                  <span className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>60% success. Fail: lose 50–100% of some inventory + 20 vibes</span>
+                  <span className="font-bold" style={{ color: 'var(--color-accent)' }}>Run</span>
+                  <span className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>Timing mini-game. Base 60% escape — skill improves odds</span>
                 </button>
 
                 <button
-                  onClick={handleFight}
+                  onClick={handleFightStart}
                   className="flex flex-col items-center gap-2 p-4 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 hover:opacity-80"
                   style={{ border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-sm)', background: 'var(--color-danger-muted)' }}
                 >
                   <span className="text-2xl">⚖️</span>
                   <span className="font-bold" style={{ color: 'var(--color-danger)' }}>Fight</span>
-                  <span className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>30% success. Fail: 40–50 vibes or terminated</span>
+                  <span className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>Allocate points. Counter raises win chance, Evade reduces damage</span>
                 </button>
               </div>
             </>
-          ) : (
+          )}
+
+          {phase === 'minigame' && decision === 'run' && (
+            <SignalScramble onComplete={handleSignalScrambleComplete} />
+          )}
+
+          {phase === 'minigame' && decision === 'fight' && (
+            <VoltageSurge onComplete={handleVoltageSurgeComplete} />
+          )}
+
+          {phase === 'result' && result && (
             <>
               <div
                 className="flex items-start gap-3 p-4 mb-4"
