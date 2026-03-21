@@ -37,8 +37,7 @@ export function VoltageSurge({ onComplete }: VoltageSurgeProps) {
       const next = prev + delta;
       if (next < 0) return prev;
       if (next > 5) return prev;
-      const otherTotal = counter;
-      if (next + otherTotal > 5) return prev;
+      if (next + counter > 5) return prev;
       return next;
     });
   }, [committed, counter]);
@@ -49,8 +48,7 @@ export function VoltageSurge({ onComplete }: VoltageSurgeProps) {
       const next = prev + delta;
       if (next < 0) return prev;
       if (next > 5) return prev;
-      const otherTotal = evade;
-      if (next + otherTotal > 5) return prev;
+      if (next + evade > 5) return prev;
       return next;
     });
   }, [committed, evade]);
@@ -80,8 +78,11 @@ export function VoltageSurge({ onComplete }: VoltageSurgeProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [committed, focusedStat, adjustEvade, adjustCounter, handleCommit, stop]);
 
-  const evadeSuccessRate = (0.30 + (counter / 5) * 0.45);
-  const evadeDmgReduction = (evade / 5) * 60;
+  const evadeDmgReduction = Math.round((evade / 5) * 60);
+  const winChance = Math.round(Math.min(75, (0.30 + (counter / 5) * 0.45) * 100));
+
+  const COUNTER_COLOR = 'var(--color-text-primary)';
+  const COUNTER_FOCUS_COLOR = 'var(--color-text-primary)';
 
   return (
     <div className="flex flex-col gap-4">
@@ -131,54 +132,64 @@ export function VoltageSurge({ onComplete }: VoltageSurgeProps) {
         >
           <Shield className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
           <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-secondary)' }}>Evade</span>
-          <span className="text-3xl font-bold" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>{evade}</span>
-          <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-            {evadeDmgReduction > 0 ? `-${Math.round(evadeDmgReduction)}% dmg if lose` : 'No dmg reduction'}
-          </p>
-          <div className="flex gap-2 w-full">
+
+          <div className="flex items-center gap-2 w-full justify-between">
             <button
               onClick={() => { adjustEvade(-1); setFocusedStat('evade'); }}
               disabled={committed || evade === 0}
-              className="flex-1 py-1.5 text-sm font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
+              className="w-8 h-8 flex items-center justify-center text-base font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
               style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text-secondary)' }}
             >−</button>
+            <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)', minWidth: 24, textAlign: 'center' }}>{evade}</span>
             <button
               onClick={() => { adjustEvade(1); setFocusedStat('evade'); }}
               disabled={committed || remaining === 0}
-              className="flex-1 py-1.5 text-sm font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
+              className="w-8 h-8 flex items-center justify-center text-base font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
               style={{ background: 'var(--color-accent)', border: '1px solid var(--color-accent)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text-inverse)' }}
             >+</button>
           </div>
+
+          <p className="text-2xl font-black tabular-nums" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+            {evade > 0 ? `-${evadeDmgReduction}%` : '—'}
+          </p>
+          <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+            dmg if lose
+          </p>
         </div>
 
         <div
           className="flex flex-col items-center gap-2 p-3 rounded-lg transition-all"
           style={{
-            border: `2px solid ${focusedStat === 'counter' && !committed ? 'var(--color-danger)' : 'var(--color-border)'}`,
+            border: `2px solid ${focusedStat === 'counter' && !committed ? COUNTER_FOCUS_COLOR : 'var(--color-border)'}`,
             borderRadius: 'var(--radius-sm)',
             background: 'var(--color-bg-raised)',
           }}
         >
-          <Zap className="w-5 h-5" style={{ color: 'var(--color-danger)' }} />
+          <Zap className="w-5 h-5" style={{ color: COUNTER_COLOR }} />
           <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-secondary)' }}>Counter</span>
-          <span className="text-3xl font-bold" style={{ color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>{counter}</span>
-          <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-            {Math.round(evadeSuccessRate * 100)}% win chance
-          </p>
-          <div className="flex gap-2 w-full">
+
+          <div className="flex items-center gap-2 w-full justify-between">
             <button
               onClick={() => { adjustCounter(-1); setFocusedStat('counter'); }}
               disabled={committed || counter === 0}
-              className="flex-1 py-1.5 text-sm font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
+              className="w-8 h-8 flex items-center justify-center text-base font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
               style={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text-secondary)' }}
             >−</button>
+            <span className="text-xl font-bold tabular-nums" style={{ color: COUNTER_COLOR, fontFamily: 'var(--font-mono)', minWidth: 24, textAlign: 'center' }}>{counter}</span>
             <button
               onClick={() => { adjustCounter(1); setFocusedStat('counter'); }}
               disabled={committed || remaining === 0}
-              className="flex-1 py-1.5 text-sm font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
-              style={{ background: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text-inverse)' }}
+              className="w-8 h-8 flex items-center justify-center text-base font-bold transition-colors focus:outline-none focus:ring-1 disabled:opacity-40"
+              style={{ background: 'var(--color-bg-surface)', border: `1px solid ${COUNTER_COLOR}`, borderRadius: 'var(--radius-sm)', color: COUNTER_COLOR }}
             >+</button>
           </div>
+
+          <p className="text-2xl font-black tabular-nums" style={{ color: COUNTER_COLOR, fontFamily: 'var(--font-mono)' }}>
+            {winChance}%
+          </p>
+          <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+            win chance
+          </p>
         </div>
       </div>
 

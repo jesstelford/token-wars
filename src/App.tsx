@@ -42,12 +42,15 @@ import { fetchUnlockedGear, getPlayerId } from './lib/gearUnlocks';
 import { computeGearEffects, getAllGear } from './utils/gearEffects';
 import { getUnlockedMiniGames, type MiniGameId } from './lib/miniGameUnlocks';
 
+const ALL_MINI_GAME_IDS: MiniGameId[] = ['signal_scramble', 'voltage_surge', 'port_scan', 'counter_hack', 'decoy'];
+const DEBUG_ARCADE = new URLSearchParams(window.location.search).get('debug_arcade') === '1';
+
 export default function App() {
   const { themeId } = useTheme();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<AssetId | null>(null);
   const [financeTab, setFinanceTab] = useState<'debt' | 'deposit' | 'withdraw'>('debt');
-  const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game' | 'arcade'>('title');
+  const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game' | 'arcade'>(DEBUG_ARCADE ? 'arcade' : 'title');
   const [hoveredAssetId, setHoveredAssetId] = useState<AssetId | null>(null);
   const [unlockedGear, setUnlockedGear] = useState<GearItemId[]>([]);
   const [unlockedMiniGames, setUnlockedMiniGames] = useState<MiniGameId[]>([]);
@@ -252,7 +255,7 @@ export default function App() {
   if (screenPhase === 'arcade') {
     return (
       <MiniGameArcadeScreen
-        unlockedGames={unlockedMiniGames}
+        unlockedGames={DEBUG_ARCADE ? ALL_MINI_GAME_IDS : unlockedMiniGames}
         onBack={() => {
           setUnlockedMiniGames(getUnlockedMiniGames());
           setScreenPhase('title');
@@ -266,7 +269,7 @@ export default function App() {
       <TitleScreen
         scores={scores}
         hasSave={hasSave()}
-        unlockedGameCount={unlockedMiniGames.length}
+        unlockedGameCount={DEBUG_ARCADE ? ALL_MINI_GAME_IDS.length : unlockedMiniGames.length}
         onNewGame={handleNewGame}
         onContinue={handleContinue}
         onTutorial={handleTutorial}
