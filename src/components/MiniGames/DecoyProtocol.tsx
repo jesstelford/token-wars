@@ -228,9 +228,6 @@ export function DecoyProtocol({ onComplete }: DecoyProtocolProps) {
                   }}
                 />
               )}
-              <span className="text-sm font-bold" style={{ color: 'var(--color-text-secondary)' }}>
-                {String.fromCharCode(65 + walletId)}
-              </span>
               {isDone && (
                 <span className="text-xs font-semibold" style={{
                   color: isReal ? 'var(--color-success)' : 'var(--color-danger)',

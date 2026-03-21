@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { unlockMiniGame } from '../../lib/miniGameUnlocks';
 import { formatCurrencyFull } from '../../utils/formatting';
 import { PortScanBlock } from '../MiniGames/PortScanBlock';
 import { CounterHackTimer } from '../MiniGames/CounterHackTimer';
@@ -60,6 +61,7 @@ export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalPr
   const originalNewTotal = originalRef.current.newTotal;
 
   function handleConfirmStart() {
+    unlockMiniGame(miniGame);
     setPhase('minigame');
   }
 

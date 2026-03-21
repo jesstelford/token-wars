@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, RefreshCw, Gamepad2, ChevronRight, Clock, Play, X } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Gamepad2, ChevronRight, Clock, Play, X, Lock } from 'lucide-react';
+import type { MiniGameId } from '../../lib/miniGameUnlocks';
 import { Header } from '../Header/Header';
 import { SignalScramble } from '../MiniGames/SignalScramble';
 import { VoltageSurge } from '../MiniGames/VoltageSurge';
@@ -276,10 +277,11 @@ function ConfirmDialog({ game, onConfirm, onCancel }: ConfirmDialogProps) {
 }
 
 interface MiniGameArcadeScreenProps {
+  unlockedGames: MiniGameId[];
   onBack: () => void;
 }
 
-export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
+export function MiniGameArcadeScreen({ unlockedGames, onBack }: MiniGameArcadeScreenProps) {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>('menu');
   const [result, setResult] = useState<ResultEntry | null>(null);
@@ -399,7 +401,7 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
               </div>
 
               <div className="flex flex-col gap-3">
-                {MINI_GAMES.map((game) => (
+                {MINI_GAMES.filter(g => unlockedGames.includes(g.id as MiniGameId)).map((game) => (
                   <button
                     key={game.id}
                     onClick={() => selectGame(game.id)}
@@ -444,6 +446,31 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
                     </div>
                     <ChevronRight className="w-4 h-4 mt-0.5 shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--color-text-muted)' }} />
                   </button>
+                ))}
+
+                {MINI_GAMES.filter(g => !unlockedGames.includes(g.id as MiniGameId)).map((game) => (
+                  <div
+                    key={game.id}
+                    className="w-full p-4 flex items-start gap-4"
+                    style={{
+                      background: 'var(--color-bg-raised)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-md)',
+                      opacity: 0.5,
+                    }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-bold text-sm" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)' }}>
+                          {game.name}
+                        </span>
+                      </div>
+                      <p className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>
+                        {game.context}
+                      </p>
+                    </div>
+                    <Lock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
+                  </div>
                 ))}
               </div>
             </>

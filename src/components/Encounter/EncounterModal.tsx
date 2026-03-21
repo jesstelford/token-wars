@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { unlockMiniGame } from '../../lib/miniGameUnlocks';
 import { AlertTriangle, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import type { EncounterState, InventoryItem } from '../../types/game';
 import type { GearItemId } from '../../constants/items';
@@ -63,6 +64,8 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
   }
 
   function handleConfirmStart() {
+    if (decision === 'run') unlockMiniGame('signal_scramble');
+    else if (decision === 'fight') unlockMiniGame('voltage_surge');
     setPhase('minigame');
   }
 

@@ -40,6 +40,7 @@ import type { ModalType } from './types/game';
 import type { GearItemId } from './constants/items';
 import { fetchUnlockedGear, getPlayerId } from './lib/gearUnlocks';
 import { computeGearEffects, getAllGear } from './utils/gearEffects';
+import { getUnlockedMiniGames, type MiniGameId } from './lib/miniGameUnlocks';
 
 export default function App() {
   const { themeId } = useTheme();
@@ -49,6 +50,7 @@ export default function App() {
   const [screenPhase, setScreenPhase] = useState<'title' | 'loadout' | 'game' | 'arcade'>('title');
   const [hoveredAssetId, setHoveredAssetId] = useState<AssetId | null>(null);
   const [unlockedGear, setUnlockedGear] = useState<GearItemId[]>([]);
+  const [unlockedMiniGames, setUnlockedMiniGames] = useState<MiniGameId[]>([]);
 
   const {
     state,
@@ -93,7 +95,14 @@ export default function App() {
   useEffect(() => {
     const playerId = getPlayerId();
     fetchUnlockedGear(playerId).then(setUnlockedGear);
+    setUnlockedMiniGames(getUnlockedMiniGames());
   }, []);
+
+  useEffect(() => {
+    if (screenPhase === 'title') {
+      setUnlockedMiniGames(getUnlockedMiniGames());
+    }
+  }, [screenPhase]);
 
   function handleNewGame() {
     clearSave();
@@ -125,6 +134,7 @@ export default function App() {
   }
 
   function handleContinue() {
+    setUnlockedMiniGames(getUnlockedMiniGames());
     setScreenPhase('game');
   }
 
@@ -242,7 +252,11 @@ export default function App() {
   if (screenPhase === 'arcade') {
     return (
       <MiniGameArcadeScreen
-        onBack={() => setScreenPhase('title')}
+        unlockedGames={unlockedMiniGames}
+        onBack={() => {
+          setUnlockedMiniGames(getUnlockedMiniGames());
+          setScreenPhase('title');
+        }}
       />
     );
   }
@@ -252,10 +266,14 @@ export default function App() {
       <TitleScreen
         scores={scores}
         hasSave={hasSave()}
+        unlockedGameCount={unlockedMiniGames.length}
         onNewGame={handleNewGame}
         onContinue={handleContinue}
         onTutorial={handleTutorial}
-        onArcade={() => setScreenPhase('arcade')}
+        onArcade={() => {
+          setUnlockedMiniGames(getUnlockedMiniGames());
+          setScreenPhase('arcade');
+        }}
       />
     );
   }

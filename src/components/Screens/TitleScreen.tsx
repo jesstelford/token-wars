@@ -9,13 +9,14 @@ import { hasTutorialBeenSeen } from '../../hooks/useTutorial';
 interface TitleScreenProps {
   scores: HighScoreEntry[];
   hasSave: boolean;
+  unlockedGameCount: number;
   onNewGame: () => void;
   onContinue: () => void;
   onTutorial: () => void;
   onArcade: () => void;
 }
 
-export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial, onArcade }: TitleScreenProps) {
+export function TitleScreen({ scores, hasSave, unlockedGameCount, onNewGame, onContinue, onTutorial, onArcade }: TitleScreenProps) {
   const [showAllScores, setShowAllScores] = useState(false);
   const top5 = scores.slice(0, 5);
   const tutorialSeen = hasTutorialBeenSeen();
@@ -77,13 +78,15 @@ export function TitleScreen({ scores, hasSave, onNewGame, onContinue, onTutorial
               <BookOpen className="w-4 h-4" />
               {tutorialSeen ? 'Replay Tutorial' : 'How to Play — Tutorial'}
             </button>
-            <button
-              onClick={onArcade}
-              className="theme-btn-secondary w-full flex items-center justify-center gap-2 py-3 text-sm"
-            >
-              <Gamepad2 className="w-4 h-4" />
-              Mini-Game Arcade
-            </button>
+            {unlockedGameCount > 0 && (
+              <button
+                onClick={onArcade}
+                className="theme-btn-secondary w-full flex items-center justify-center gap-2 py-3 text-sm"
+              >
+                <Gamepad2 className="w-4 h-4" />
+                Mini-Game Arcade
+              </button>
+            )}
           </div>
 
           <div

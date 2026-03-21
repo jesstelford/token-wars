@@ -74,67 +74,70 @@ export function PortScanBlock({ onComplete }: PortScanBlockProps) {
   }, []);
 
   useEffect(() => {
-    const times: number[] = [];
-    for (let i = 0; i < TOTAL_EVENTS; i++) {
-      times.push(500 + (i / TOTAL_EVENTS) * 9500 + Math.random() * 800);
+    interface EventPlan {
+      activateAt: number;
+      nodeIdx: number;
+      windowMs: number;
     }
-    times.sort((a, b) => a - b);
 
-    let activeCount = 0;
+    const plans: EventPlan[] = [];
+    const usedSlots: Array<{ node: number; from: number; to: number }> = [];
 
-    times.forEach((t, eventIdx) => {
-      const timer = setTimeout(() => {
+    for (let i = 0; i < TOTAL_EVENTS; i++) {
+      const activateAt = 500 + (i / TOTAL_EVENTS) * 9000 + Math.random() * 700;
+      const windowMs = 1400 + Math.random() * 800;
+      const deactivateAt = activateAt + windowMs;
+
+      const shuffledNodes = Array.from({ length: 6 }, (_, n) => n).sort(() => Math.random() - 0.5);
+      let chosen = -1;
+      for (const candidate of shuffledNodes) {
+        const conflict = usedSlots.some(
+          s => s.node === candidate && s.from < deactivateAt + 200 && s.to > activateAt - 200
+        );
+        if (!conflict) { chosen = candidate; break; }
+      }
+      if (chosen === -1) chosen = shuffledNodes[0];
+
+      usedSlots.push({ node: chosen, from: activateAt, to: deactivateAt });
+      plans.push({ activateAt, nodeIdx: chosen, windowMs });
+    }
+
+    plans.sort((a, b) => a.activateAt - b.activateAt);
+
+    plans.forEach(({ activateAt, nodeIdx, windowMs }) => {
+      const capturedNode = nodeIdx;
+
+      const actTimer = setTimeout(() => {
         if (gameOverRef.current) return;
-        if (activeCount >= 4) return;
-        if (eventsFiredRef.current >= TOTAL_EVENTS) return;
         eventsFiredRef.current++;
-
-        let nodeIdx = Math.floor(Math.random() * 6);
-        let tries = 0;
-        while (tries < 6) {
-          let currentlyActive = false;
-          setNodes(prev => {
-            currentlyActive = prev[nodeIdx].active;
-            return prev;
-          });
-          if (!currentlyActive) break;
-          nodeIdx = (nodeIdx + 1) % 6;
-          tries++;
-        }
-
-        const capturedNodeIdx = nodeIdx;
-        activeCount++;
         setNodes(prev => {
-          if (prev[capturedNodeIdx].active) return prev;
           const next = [...prev];
-          next[capturedNodeIdx] = { ...next[capturedNodeIdx], active: true, blocked: false, missed: false };
+          next[capturedNode] = { active: true, blocked: false, missed: false };
           return next;
         });
 
-        const windowMs = 1200 + Math.random() * 800;
         const deactTimer = setTimeout(() => {
-          activeCount = Math.max(0, activeCount - 1);
           setNodes(prev => {
-            if (!prev[capturedNodeIdx].active) return prev;
+            if (!prev[capturedNode].active) return prev;
             const next = [...prev];
-            next[capturedNodeIdx] = { ...next[capturedNodeIdx], active: false, missed: true };
-            setTimeout(() => {
-              setNodes(n => {
-                const r = [...n];
-                r[capturedNodeIdx] = { ...r[capturedNodeIdx], missed: false };
-                return r;
-              });
-            }, 400);
+            next[capturedNode] = { active: false, blocked: false, missed: true };
             return next;
           });
-          deactivationTimersRef.current.delete(capturedNodeIdx);
+          setTimeout(() => {
+            setNodes(prev => {
+              if (!prev[capturedNode].missed) return prev;
+              const next = [...prev];
+              next[capturedNode] = { ...next[capturedNode], missed: false };
+              return next;
+            });
+          }, 500);
+          deactivationTimersRef.current.delete(capturedNode);
         }, windowMs);
 
-        deactivationTimersRef.current.set(capturedNodeIdx, deactTimer);
-      }, t);
+        deactivationTimersRef.current.set(capturedNode, deactTimer);
+      }, activateAt);
 
-      activationTimersRef.current.push(timer);
-      void eventIdx;
+      activationTimersRef.current.push(actTimer);
     });
 
     return () => {

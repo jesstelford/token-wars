@@ -18,8 +18,14 @@ export function CounterHackTimer({ onComplete }: CounterHackTimerProps) {
   const releasedRef = useRef(false);
 
   const FILL_DURATION_MS = 5000;
-  const ZONE_BOTTOM = 0.68;
-  const ZONE_TOP = 0.80;
+  const zoneRef = useRef<[number, number] | null>(null);
+  if (zoneRef.current === null) {
+    const zoneSize = 0.06 + Math.random() * 0.06;
+    const centre = 0.68 + Math.random() * 0.06;
+    zoneRef.current = [centre - zoneSize / 2, centre + zoneSize / 2];
+  }
+  const ZONE_BOTTOM = zoneRef.current[0];
+  const ZONE_TOP = zoneRef.current[1];
 
   const resolveRelease = useCallback((fill: number) => {
     if (releasedRef.current) return;
@@ -30,11 +36,14 @@ export function CounterHackTimer({ onComplete }: CounterHackTimerProps) {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     if (totalTimerRef.current !== null) clearTimeout(totalTimerRef.current);
 
+    const zoneMid = (ZONE_BOTTOM + ZONE_TOP) / 2;
+    const nearBand = 0.08;
+    const partialBand = 0.15;
     let mult: number;
     let res: 'full' | 'near' | 'partial' | 'miss';
     if (fill >= ZONE_BOTTOM && fill <= ZONE_TOP) { mult = 0.0; res = 'full'; }
-    else if (fill >= 0.60 && fill <= 0.87) { mult = 0.35; res = 'near'; }
-    else if (fill >= 0.50 && fill <= 0.92) { mult = 0.65; res = 'partial'; }
+    else if (fill >= zoneMid - nearBand && fill <= zoneMid + nearBand) { mult = 0.35; res = 'near'; }
+    else if (fill >= zoneMid - partialBand && fill <= zoneMid + partialBand) { mult = 0.65; res = 'partial'; }
     else { mult = 1.0; res = 'miss'; }
 
     setOutcome(res);
