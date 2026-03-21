@@ -8,6 +8,7 @@ import { buildDetailedInventoryLoss, type LostInventoryEntry } from '../../utils
 import type { ActiveEffects } from '../../utils/gearEffects';
 import { SignalScramble } from '../MiniGames/SignalScramble';
 import { VoltageSurge } from '../MiniGames/VoltageSurge';
+import { MiniGameConfirmDialog, type MiniGameInfo } from '../MiniGames/MiniGameConfirmDialog';
 
 interface EncounterModalProps {
   encounter: EncounterState;
@@ -18,7 +19,7 @@ interface EncounterModalProps {
 }
 
 type Decision = 'run' | 'fight' | null;
-type MiniGamePhase = 'choose' | 'minigame' | 'result';
+type MiniGamePhase = 'choose' | 'confirm' | 'minigame' | 'result';
 
 interface Result {
   success: boolean;
@@ -29,20 +30,45 @@ interface Result {
   precomputedInventory?: InventoryItem[];
 }
 
+const RUN_GAME_INFO: MiniGameInfo = {
+  name: 'Signal Scramble',
+  description: 'A timing bar bounces back and forth. Press at the right moment to land in the green zone.',
+  objective: 'Hit the green zone to maximise your escape chance.',
+  timeLimitSeconds: 6,
+  urgencyLabel: 'Run — Mini-Game',
+};
+
+const FIGHT_GAME_INFO: MiniGameInfo = {
+  name: 'Voltage Surge',
+  description: 'Allocate 5 points between Evade and Counter before the clock runs out.',
+  objective: 'Counter raises your win chance; Evade reduces damage if you lose.',
+  timeLimitSeconds: 10,
+  urgencyLabel: 'Fight — Mini-Game',
+};
+
 export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFight }: EncounterModalProps) {
   const [decision, setDecision] = useState<Decision>(null);
   const [phase, setPhase] = useState<MiniGamePhase>('choose');
   const [result, setResult] = useState<Result | null>(null);
   const [resolvedSuccess, setResolvedSuccess] = useState<boolean>(false);
 
-  function handleRunStart() {
+  function handleRunConfirm() {
     setDecision('run');
+    setPhase('confirm');
+  }
+
+  function handleFightConfirm() {
+    setDecision('fight');
+    setPhase('confirm');
+  }
+
+  function handleConfirmStart() {
     setPhase('minigame');
   }
 
-  function handleFightStart() {
-    setDecision('fight');
-    setPhase('minigame');
+  function handleConfirmCancel() {
+    setDecision(null);
+    setPhase('choose');
   }
 
   function handleSignalScrambleComplete(performanceScore: number) {
@@ -104,6 +130,8 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
     }
   }
 
+  const confirmGameInfo = decision === 'run' ? RUN_GAME_INFO : FIGHT_GAME_INFO;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: 'var(--modal-backdrop)' }}>
       <div className="shadow-2xl max-w-md w-full mx-4 overflow-hidden" style={{ background: 'var(--modal-bg)', border: '1px solid var(--color-danger)', borderRadius: 'var(--modal-radius)' }}>
@@ -121,7 +149,7 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
               <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text-secondary)' }}>{encounter.message}</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={handleRunStart}
+                  onClick={handleRunConfirm}
                   className="flex flex-col items-center gap-2 p-4 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 hover:opacity-80"
                   style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-raised)' }}
                 >
@@ -131,7 +159,7 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
                 </button>
 
                 <button
-                  onClick={handleFightStart}
+                  onClick={handleFightConfirm}
                   className="flex flex-col items-center gap-2 p-4 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 hover:opacity-80"
                   style={{ border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-sm)', background: 'var(--color-danger-muted)' }}
                 >
@@ -141,6 +169,14 @@ export function EncounterModal({ encounter, inventory, gearEffects, onRun, onFig
                 </button>
               </div>
             </>
+          )}
+
+          {phase === 'confirm' && decision && (
+            <MiniGameConfirmDialog
+              game={confirmGameInfo}
+              onConfirm={handleConfirmStart}
+              onCancel={handleConfirmCancel}
+            />
           )}
 
           {phase === 'minigame' && decision === 'run' && (

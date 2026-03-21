@@ -4,6 +4,7 @@ import { formatCurrencyFull } from '../../utils/formatting';
 import { PortScanBlock } from '../MiniGames/PortScanBlock';
 import { CounterHackTimer } from '../MiniGames/CounterHackTimer';
 import { DecoyProtocol } from '../MiniGames/DecoyProtocol';
+import { MiniGameConfirmDialog, type MiniGameInfo } from '../MiniGames/MiniGameConfirmDialog';
 
 type MiniGameType = 'port_scan' | 'counter_hack' | 'decoy';
 
@@ -18,12 +19,38 @@ interface TheftModalProps {
   onClose: (adjustedAmountLost?: number, adjustedNewTotal?: number) => void;
 }
 
-type Phase = 'minigame' | 'result';
+type Phase = 'confirm' | 'minigame' | 'result';
+
+const MINI_GAME_INFO: Record<MiniGameType, MiniGameInfo> = {
+  port_scan: {
+    name: 'Port Scan Block',
+    description: 'Nodes light up one by one. Click each active node before its window closes.',
+    objective: 'Block as many intrusion nodes as possible to protect your cash.',
+    timeLimitSeconds: 12,
+    urgencyLabel: 'Robbery in Progress',
+  },
+  counter_hack: {
+    name: 'Counter-Hack Timer',
+    description: 'Hold the button to fill a bar, then release inside the amber zone.',
+    objective: 'Release at the right fill level to counter the bank hack.',
+    timeLimitSeconds: 7,
+    urgencyLabel: 'Bank Account Under Attack',
+    timedNote: '5s fill window + 2s safety margin',
+  },
+  decoy: {
+    name: 'Decoy Protocol',
+    description: 'Watch the wallets shuffle, then pick the one hiding the real funds.',
+    objective: 'Track the real wallet through the shuffle to protect your savings.',
+    timeLimitSeconds: 4,
+    urgencyLabel: 'Social Engineering Attack',
+    timedNote: 'Decision window starts after the shuffle ends',
+  },
+};
 
 export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalProps) {
   const isRobbery = type === 'robbery';
   const [miniGame] = useState<MiniGameType>(() => isRobbery ? 'port_scan' : pickBankHackGame());
-  const [phase, setPhase] = useState<Phase>('minigame');
+  const [phase, setPhase] = useState<Phase>('confirm');
   const [finalAmountLost, setFinalAmountLost] = useState(amountLost);
   const [finalNewTotal, setFinalNewTotal] = useState(newTotal);
   const [multiplierUsed, setMultiplierUsed] = useState(1.0);
@@ -31,6 +58,14 @@ export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalPr
 
   const originalAmountLost = originalRef.current.amountLost;
   const originalNewTotal = originalRef.current.newTotal;
+
+  function handleConfirmStart() {
+    setPhase('minigame');
+  }
+
+  function handleConfirmCancel() {
+    onClose();
+  }
 
   function handleMiniGameComplete(theftMultiplier: number) {
     const savedAmount = originalAmountLost - Math.floor(originalAmountLost * theftMultiplier);
@@ -73,15 +108,31 @@ export function TheftModal({ type, amountLost, newTotal, onClose }: TheftModalPr
           <AlertTriangle className="w-6 h-6 shrink-0" style={{ color: isRobbery ? 'var(--color-text-inverse)' : 'var(--color-warning)' }} />
           <div>
             <h2 className="font-bold text-lg tracking-tight" style={{ color: isRobbery ? 'var(--color-text-inverse)' : 'var(--color-text-primary)' }}>
-              {phase === 'minigame' ? miniGameTitles[miniGame] : (isRobbery ? 'You Were Robbed' : 'Bank Account Hacked')}
+              {phase === 'confirm'
+                ? (isRobbery ? 'You Are Being Robbed' : 'Your Bank Is Being Hacked')
+                : phase === 'minigame'
+                  ? miniGameTitles[miniGame]
+                  : (isRobbery ? 'You Were Robbed' : 'Bank Account Hacked')}
             </h2>
             <p className="text-xs" style={{ color: isRobbery ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)', opacity: isRobbery ? 0.85 : 1 }}>
-              {phase === 'minigame' ? miniGameSubtitles[miniGame] : (isRobbery ? 'Cash stolen from your wallet' : 'Savings drained remotely')}
+              {phase === 'confirm'
+                ? (isRobbery ? `Up to ${formatCurrencyFull(amountLost)} in cash at risk` : `Up to ${formatCurrencyFull(amountLost)} in savings at risk`)
+                : phase === 'minigame'
+                  ? miniGameSubtitles[miniGame]
+                  : (isRobbery ? 'Cash stolen from your wallet' : 'Savings drained remotely')}
             </p>
           </div>
         </div>
 
         <div className="px-6 py-5">
+          {phase === 'confirm' && (
+            <MiniGameConfirmDialog
+              game={MINI_GAME_INFO[miniGame]}
+              onConfirm={handleConfirmStart}
+              onCancel={handleConfirmCancel}
+            />
+          )}
+
           {phase === 'minigame' && (
             <>
               {miniGame === 'port_scan' && (
