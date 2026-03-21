@@ -18,8 +18,8 @@ export function CounterHackTimer({ onComplete }: CounterHackTimerProps) {
   const releasedRef = useRef(false);
 
   const FILL_DURATION_MS = 5000;
-  const ZONE_BOTTOM = 0.65;
-  const ZONE_TOP = 0.85;
+  const ZONE_BOTTOM = 0.68;
+  const ZONE_TOP = 0.80;
 
   const resolveRelease = useCallback((fill: number) => {
     if (releasedRef.current) return;
@@ -33,8 +33,8 @@ export function CounterHackTimer({ onComplete }: CounterHackTimerProps) {
     let mult: number;
     let res: 'full' | 'near' | 'partial' | 'miss';
     if (fill >= ZONE_BOTTOM && fill <= ZONE_TOP) { mult = 0.0; res = 'full'; }
-    else if (fill >= 0.55 && fill <= 0.90) { mult = 0.35; res = 'near'; }
-    else if (fill >= 0.45 && fill <= 0.95) { mult = 0.65; res = 'partial'; }
+    else if (fill >= 0.60 && fill <= 0.87) { mult = 0.35; res = 'near'; }
+    else if (fill >= 0.50 && fill <= 0.92) { mult = 0.65; res = 'partial'; }
     else { mult = 1.0; res = 'miss'; }
 
     setOutcome(res);

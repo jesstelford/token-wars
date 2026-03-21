@@ -76,7 +76,7 @@ export function PortScanBlock({ onComplete }: PortScanBlockProps) {
   useEffect(() => {
     const times: number[] = [];
     for (let i = 0; i < TOTAL_EVENTS; i++) {
-      times.push(Math.random() * 10500);
+      times.push(500 + (i / TOTAL_EVENTS) * 9500 + Math.random() * 800);
     }
     times.sort((a, b) => a - b);
 
@@ -85,7 +85,7 @@ export function PortScanBlock({ onComplete }: PortScanBlockProps) {
     times.forEach((t, eventIdx) => {
       const timer = setTimeout(() => {
         if (gameOverRef.current) return;
-        if (activeCount >= 2) return;
+        if (activeCount >= 4) return;
         if (eventsFiredRef.current >= TOTAL_EVENTS) return;
         eventsFiredRef.current++;
 
@@ -111,7 +111,7 @@ export function PortScanBlock({ onComplete }: PortScanBlockProps) {
           return next;
         });
 
-        const windowMs = 800 + Math.random() * 600;
+        const windowMs = 1200 + Math.random() * 800;
         const deactTimer = setTimeout(() => {
           activeCount = Math.max(0, activeCount - 1);
           setNodes(prev => {
