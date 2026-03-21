@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, RefreshCw, Gamepad2, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, RefreshCw, Gamepad2, ChevronRight, Clock, Play, X } from 'lucide-react';
 import { Header } from '../Header/Header';
 import { SignalScramble } from '../MiniGames/SignalScramble';
 import { VoltageSurge } from '../MiniGames/VoltageSurge';
@@ -11,45 +11,60 @@ interface MiniGameDef {
   id: string;
   name: string;
   description: string;
+  objective: string;
   context: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
+  timeLimitSeconds: number;
+  timedNote?: string;
 }
 
 const MINI_GAMES: MiniGameDef[] = [
   {
     id: 'signal_scramble',
     name: 'Signal Scramble',
-    description: 'Lock in the timing bar within the green zone to escape regulators.',
+    description: 'A timing bar bounces back and forth. Press at the right moment to land in the green zone.',
+    objective: 'Hit the green zone to maximise your escape chance.',
     context: 'Used when running from an encounter',
     difficulty: 'Easy',
+    timeLimitSeconds: 6,
   },
   {
     id: 'voltage_surge',
     name: 'Voltage Surge',
-    description: 'Distribute 5 points between Evade and Counter to shape your fight odds.',
+    description: 'Allocate 5 points between Evade and Counter before the clock runs out.',
+    objective: 'Distribute your points to shape your fight odds and damage reduction.',
     context: 'Used when fighting an encounter',
     difficulty: 'Medium',
+    timeLimitSeconds: 10,
   },
   {
     id: 'port_scan',
     name: 'Port Scan Block',
-    description: 'Block intrusion nodes as they light up to limit robbery losses.',
+    description: 'Nodes light up one by one. Click each active node before its window closes.',
+    objective: 'Block as many intrusion nodes as possible to protect your funds.',
     context: 'Used during a robbery',
     difficulty: 'Hard',
+    timeLimitSeconds: 12,
   },
   {
     id: 'counter_hack',
     name: 'Counter-Hack Timer',
-    description: 'Hold and release the button in the amber zone to counter a bank hack.',
+    description: 'Hold the button to fill a bar, then release inside the amber zone.',
+    objective: 'Release at the right fill level to nullify the bank hack.',
     context: 'Used during a bank hack',
     difficulty: 'Medium',
+    timeLimitSeconds: 7,
+    timedNote: '5s fill window + 2s safety margin',
   },
   {
     id: 'decoy',
     name: 'Decoy Protocol',
-    description: 'Track the real wallet through the shuffle to protect your savings.',
+    description: 'Watch the wallets shuffle, then pick the one hiding the real funds.',
+    objective: 'Track the real wallet through the shuffle to protect your savings.',
     context: 'Used during a bank hack',
     difficulty: 'Easy',
+    timeLimitSeconds: 4,
+    timedNote: 'Decision window starts after the shuffle ends',
   },
 ];
 
@@ -65,7 +80,7 @@ const DIFFICULTY_MUTED: Record<string, string> = {
   Hard: 'var(--color-danger-muted)',
 };
 
-type Phase = 'menu' | 'playing' | 'result';
+type Phase = 'menu' | 'confirm' | 'playing' | 'result';
 
 interface ResultEntry {
   label: string;
@@ -103,6 +118,163 @@ function scoreTheft(mult: number): ResultEntry {
   };
 }
 
+interface ConfirmDialogProps {
+  game: MiniGameDef;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmDialog({ game, onConfirm, onCancel }: ConfirmDialogProps) {
+  const confirmRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    confirmRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-desc"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(3px)' }}
+    >
+      <div
+        className="w-full max-w-sm flex flex-col gap-0 overflow-hidden"
+        style={{
+          background: 'var(--color-bg-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-xl, 0 20px 60px rgba(0,0,0,0.4))',
+        }}
+      >
+        <div
+          className="px-5 pt-5 pb-4 flex flex-col gap-3"
+          style={{ borderBottom: '1px solid var(--color-border)' }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <Gamepad2 className="w-5 h-5 shrink-0" style={{ color: 'var(--color-accent)' }} />
+              <h2
+                id="confirm-title"
+                className="text-lg font-black leading-tight"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text-heading)', letterSpacing: '-0.01em' }}
+              >
+                Ready to start?
+              </h2>
+            </div>
+            <button
+              onClick={onCancel}
+              aria-label="Cancel and go back"
+              className="p-1 rounded hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 shrink-0"
+              style={{ color: 'var(--color-text-muted)', borderRadius: 'var(--radius-sm)' }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="text-base font-black"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text-primary)' }}
+              >
+                {game.name}
+              </span>
+              <span
+                className="text-xs font-bold px-1.5 py-0.5"
+                style={{
+                  color: DIFFICULTY_COLORS[game.difficulty],
+                  background: DIFFICULTY_MUTED[game.difficulty],
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                {game.difficulty}
+              </span>
+            </div>
+            <p
+              id="confirm-desc"
+              className="text-sm leading-relaxed"
+              style={{ color: 'var(--color-text-secondary)' }}
+            >
+              {game.description}
+            </p>
+            <p
+              className="text-sm mt-1.5 font-medium"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              {game.objective}
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 flex flex-col gap-4">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5"
+            style={{
+              background: 'var(--color-warning-muted)',
+              border: '1px solid var(--color-warning)',
+              borderRadius: 'var(--radius-sm)',
+            }}
+            role="note"
+            aria-label="Time limit information"
+          >
+            <Clock className="w-4 h-4 shrink-0" style={{ color: 'var(--color-warning)' }} />
+            <div className="flex flex-col gap-0.5">
+              <span
+                className="text-sm font-bold"
+                style={{ color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}
+              >
+                Time Limit: {game.timeLimitSeconds} seconds
+              </span>
+              {game.timedNote && (
+                <span
+                  className="text-xs"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {game.timedNote}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div
+            className="text-xs italic text-center"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {game.context}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onCancel}
+              className="flex-1 py-2.5 text-sm font-bold transition-colors focus:outline-none focus:ring-2 theme-btn-secondary"
+              aria-label="Cancel and return to game list"
+            >
+              Go Back
+            </button>
+            <button
+              ref={confirmRef}
+              onClick={onConfirm}
+              className="flex-1 py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 theme-btn-primary"
+              aria-label={`Start ${game.name}`}
+            >
+              <Play className="w-4 h-4" />
+              Start Game
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface MiniGameArcadeScreenProps {
   onBack: () => void;
 }
@@ -115,17 +287,25 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
 
   const gameDef = MINI_GAMES.find(g => g.id === selectedGame);
 
-  function startGame(id: string) {
+  function selectGame(id: string) {
     setSelectedGame(id);
-    setPhase('playing');
+    setPhase('confirm');
     setResult(null);
+  }
+
+  function confirmStart() {
+    setPhase('playing');
     setPlayKey(k => k + 1);
   }
 
+  function cancelConfirm() {
+    setPhase('menu');
+    setSelectedGame(null);
+  }
+
   function handleReplay() {
-    setPhase('playing');
+    setPhase('confirm');
     setResult(null);
-    setPlayKey(k => k + 1);
   }
 
   function handleBack() {
@@ -176,20 +356,31 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
     return null;
   }
 
+  const backLabel = phase === 'menu' ? 'Main Menu' : 'Back to Arcade';
+  const backAction = phase === 'menu' ? onBack : handleBack;
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg-root)' }}>
       <Header />
+
+      {phase === 'confirm' && gameDef && (
+        <ConfirmDialog
+          game={gameDef}
+          onConfirm={confirmStart}
+          onCancel={cancelConfirm}
+        />
+      )}
 
       <div className="flex-1 flex flex-col items-center p-4 sm:p-6">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={phase === 'menu' ? onBack : handleBack}
+              onClick={backAction}
               className="flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-70 focus:outline-none focus:ring-2"
               style={{ color: 'var(--color-accent)', borderRadius: 'var(--radius-sm)' }}
             >
               <ArrowLeft className="w-4 h-4" />
-              {phase === 'menu' ? 'Main Menu' : 'Back to Arcade'}
+              {backLabel}
             </button>
           </div>
 
@@ -211,8 +402,9 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
                 {MINI_GAMES.map((game) => (
                   <button
                     key={game.id}
-                    onClick={() => startGame(game.id)}
+                    onClick={() => selectGame(game.id)}
                     className="w-full text-left p-4 flex items-start gap-4 transition-all hover:opacity-90 focus:outline-none focus:ring-2 group"
+                    aria-label={`Select ${game.name}, ${game.difficulty} difficulty, ${game.timeLimitSeconds} second time limit`}
                     style={{
                       background: 'var(--color-bg-surface)',
                       border: '1px solid var(--color-border)',
@@ -221,12 +413,12 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
                     }}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-bold text-sm" style={{ color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)' }}>
                           {game.name}
                         </span>
                         <span
-                          className="text-xs font-bold px-1.5 py-0.5 rounded"
+                          className="text-xs font-bold px-1.5 py-0.5"
                           style={{
                             color: DIFFICULTY_COLORS[game.difficulty],
                             background: DIFFICULTY_MUTED[game.difficulty],
@@ -234,6 +426,13 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
                           }}
                         >
                           {game.difficulty}
+                        </span>
+                        <span
+                          className="flex items-center gap-1 text-xs font-semibold"
+                          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                        >
+                          <Clock className="w-3 h-3" />
+                          {game.timeLimitSeconds}s
                         </span>
                       </div>
                       <p className="text-xs leading-snug mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
@@ -253,20 +452,29 @@ export function MiniGameArcadeScreen({ onBack }: MiniGameArcadeScreenProps) {
           {(phase === 'playing' || phase === 'result') && gameDef && (
             <>
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
                   <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text-heading)' }}>
                     {gameDef.name}
                   </h2>
-                  <span
-                    className="text-xs font-bold px-2 py-0.5 rounded"
-                    style={{
-                      color: DIFFICULTY_COLORS[gameDef.difficulty],
-                      background: DIFFICULTY_MUTED[gameDef.difficulty],
-                      borderRadius: 'var(--radius-sm)',
-                    }}
-                  >
-                    {gameDef.difficulty}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="flex items-center gap-1 text-xs font-semibold"
+                      style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      <Clock className="w-3 h-3" />
+                      {gameDef.timeLimitSeconds}s
+                    </span>
+                    <span
+                      className="text-xs font-bold px-2 py-0.5"
+                      style={{
+                        color: DIFFICULTY_COLORS[gameDef.difficulty],
+                        background: DIFFICULTY_MUTED[gameDef.difficulty],
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                    >
+                      {gameDef.difficulty}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
                   {gameDef.context}
