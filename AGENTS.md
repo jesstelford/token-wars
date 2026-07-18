@@ -15,6 +15,24 @@ React 18 + TypeScript 5 | Vite 5 | Tailwind CSS 3 | Lucide React | LocalStorage 
 
 ---
 
+## Build & Deploy
+
+The app is deployed via **GitHub Pages**, which serves the static build from the `docs/` directory. `vite.config.ts` sets `build.outDir` to `./docs`, so `npm run build` writes the production bundle there.
+
+**Every PR must include a fresh `docs/` build.** Before committing, run:
+
+```
+npm run build
+```
+
+Then stage and commit the updated `docs/` output **together with your source changes in the same PR**. If `docs/` is stale (source changed but the build wasn't regenerated), GitHub Pages will deploy an outdated app.
+
+- Do **not** hand-edit files in `docs/` — they are generated. Change `src/` and rebuild.
+- `docs/` is intentionally committed (it is **not** gitignored); the build artifacts are part of each PR.
+- Recommended pre-commit checklist: `npm run typecheck` → `npm run lint` → `npm run build`, then commit `src/` + `docs/` together.
+
+---
+
 ## CRITICAL: Data Persistence Rules
 
 **DO NOT use Supabase, any remote database, or any external API for data persistence.**
