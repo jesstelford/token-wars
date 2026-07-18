@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Shield } from 'lucide-react';
 import { GEAR_MAP, RARITY_COLORS, MAX_GEAR_SLOTS } from '../../constants/items';
 import type { GearItemId } from '../../constants/items';

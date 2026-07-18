@@ -16,6 +16,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
       try {
         localStorage.setItem(key, JSON.stringify(resolved));
       } catch {
+        // ignore write failures (private mode / quota exceeded); keep in-memory value
       }
       return resolved;
     });

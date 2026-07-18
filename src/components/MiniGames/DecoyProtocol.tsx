@@ -23,7 +23,7 @@ function computePixelPositions(order: number[]): number[] {
 export function DecoyProtocol({ onComplete }: DecoyProtocolProps) {
   const [realWalletId] = useState(() => Math.floor(Math.random() * 3));
   const [phase, setPhase] = useState<Phase>('reveal');
-  const [order, setOrder] = useState([0, 1, 2]);
+  const [, setOrder] = useState([0, 1, 2]);
   const [pixelX, setPixelX] = useState(SLOT_POSITIONS);
   const [animating, setAnimating] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);

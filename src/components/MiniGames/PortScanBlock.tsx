@@ -17,7 +17,7 @@ const TOTAL_EVENTS = 8;
 export function PortScanBlock({ onComplete }: PortScanBlockProps) {
   const [nodes, setNodes] = useState<NodeState[]>(Array(6).fill(null).map(() => ({ active: false, blocked: false, missed: false })));
   const [blockedCount, setBlockedCount] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const [, setGameOver] = useState(false);
   const [selectedNode, setSelectedNode] = useState(0);
   const activationTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const deactivationTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());

@@ -1,4 +1,4 @@
-import { GEAR_ITEMS, GEAR_MAP, type GearItemId } from '../constants/items';
+import { GEAR_ITEMS, type GearItemId } from '../constants/items';
 import type { PendingVendor } from '../types/game';
 import { rollWeightedRarity } from './gearEffects';
 

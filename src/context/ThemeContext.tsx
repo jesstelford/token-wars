@@ -32,7 +32,9 @@ function loadStored(): StoredTheme {
       const parsed = JSON.parse(raw) as StoredTheme;
       if (parsed.id && parsed.mode) return parsed;
     }
-  } catch {}
+  } catch {
+    // ignore malformed/absent stored theme; fall back to default
+  }
   return { id: 'default', mode: 'light' };
 }
 
