@@ -1,7 +1,6 @@
 import { Gift, X } from 'lucide-react';
 import { ASSET_MAP } from '../../constants/assets';
 import type { AssetId } from '../../constants/assets';
-import { formatCurrencyFull } from '../../utils/formatting';
 
 interface FreeTokenModalProps {
   assetId: AssetId;

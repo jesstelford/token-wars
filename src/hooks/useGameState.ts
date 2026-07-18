@@ -307,7 +307,7 @@ export function useGameState() {
       const effectiveCapacity = prev.capacity + gearEffects.capacityBonus;
       if (usedCapacity + quantity > effectiveCapacity) return prev;
       const existingIndex = prev.inventory.findIndex(i => i.assetId === assetId);
-      let newInventory = [...prev.inventory];
+      const newInventory = [...prev.inventory];
       if (existingIndex >= 0) {
         const existing = newInventory[existingIndex];
         const totalQty = existing.quantity + quantity;

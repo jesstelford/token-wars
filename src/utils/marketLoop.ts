@@ -10,7 +10,6 @@ import type { ActiveEffects } from './gearEffects';
 import { getAllGear } from './gearEffects';
 import { rollScavengeDrop, rollVendorEvent, rollMilestoneDrop, pickMilestoneItem } from './itemDrops';
 import { GEAR_MAP } from '../constants/items';
-import type { GearItemId } from '../constants/items';
 
 interface MarketLoopResult {
   updatedState: Partial<GameState>;
@@ -59,10 +58,10 @@ export function runMarketLoop(state: GameState, targetCommunity: CommunityId, ge
   const newEvents: GameEvent[] = [];
   let updatedCash = state.current_cash;
   const effectiveDebtRate = Math.max(0.02, DEBT_INTEREST_RATE - fx.debtRateReduction);
-  let updatedDebt = state.current_debt * (1 + effectiveDebtRate);
+  const updatedDebt = state.current_debt * (1 + effectiveDebtRate);
   let updatedBankSavings = state.bank_savings * (1 + BANK_INTEREST_RATE);
   const healthRegen = Math.min(15, 5 + fx.healthRegenBonus);
-  let updatedHealth = Math.min(100, state.health + healthRegen);
+  const updatedHealth = Math.min(100, state.health + healthRegen);
   let encounter: EncounterState | null = null;
   let robbedAmount = 0;
   let bankHackedAmount = 0;

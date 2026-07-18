@@ -211,7 +211,22 @@ export const GEAR_ITEMS: GearItem[] = [
   },
 ];
 
-export type GearItemId = typeof GEAR_ITEMS[number]['id'];
+export type GearItemId =
+  | 'rabbit_foot_usb'
+  | 'encrypted_nas'
+  | 'medkit_sub'
+  | 'loan_shark_contact'
+  | 'vpn_cloak'
+  | 'insider_newsletter'
+  | '2fa_key'
+  | 'sentiment_analyzer'
+  | 'legal_shield'
+  | 'whale_tracker'
+  | 'diplomatic_passport'
+  | 'quantum_drive'
+  | 'bionic_implant'
+  | 'cold_storage_vault'
+  | 'alpha_leak_feed';
 
 export const GEAR_MAP = Object.fromEntries(GEAR_ITEMS.map(g => [g.id, g])) as Record<GearItemId, GearItem>;
 
